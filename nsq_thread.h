@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <map>
 #include <list>
+#include <unistd.h>
 
 namespace NSQTOOL
 {
@@ -61,20 +62,22 @@ namespace NSQTOOL
 		void PostCmd(CCommand &cCmd)
 		{
 			pthread_mutex_lock(&m_mutex2);
-			ProcessCmd(cCmd);
+			RealProcessCmd(&cCmd);
 			pthread_mutex_unlock(&m_mutex2);
 		}
 		
-		virtual void ProcessCmd(CCommand &cCmd)
+		virtual void RealProcessCmd(CCommand *cCmd)
 		{
-			if (cCmd.GetCmdType() == STOP_TYPE)
+           // fprintf(stdout, "CThread::ProcessCmd(cmd)\n");
+			if (cCmd->GetCmdType() == STOP_TYPE)
 			{
 				m_lstCmd.clear();	
 			}
 		}
 		
-		uint32_t ProcessCmd()
+		uint32_t ProcessCmd(CThread *pThis)
 		{
+            //fprintf(stdout, "CThread::ProcessCmd()\n");
 			uint32_t iRet = 0;
 			
 			while (m_lstCmd.size() != 0)
@@ -87,23 +90,28 @@ namespace NSQTOOL
 				}
 				
 				CCommand cCmd = *m_lstCmd.begin();
+                m_lstCmd.erase(m_lstCmd.begin());
 				pthread_mutex_unlock(&m_mutex);
 				
 				pthread_mutex_lock(&m_mutex2);
-				ProcessCmd(cCmd);
+				pThis->RealProcessCmd(&cCmd);
 				pthread_mutex_unlock(&m_mutex2);
 				
 				iRet ++;
 			}
+
+            //fprintf(stdout, "CThread::ProcessCmd() end\n");
 
 			return iRet;
 		}
 
 		virtual void RealRun()
 		{
+            fprintf(stdout, "CThread RealRun\n");
+            //sleep(10);
 			while (!m_bStop)
 			{
-				uint32_t iRet = ProcessCmd();
+				uint32_t iRet = ProcessCmd(this);
 				
 				if (iRet ==0 )
 				{
@@ -141,7 +149,7 @@ namespace NSQTOOL
 	class CThreadPoolInterface
 	{
 	public:
-		virtual int32_t Init(uint32_t iNum, void *pArg)=0;	
+		virtual int32_t Init(uint32_t iThreadType, uint32_t iNum, void *pArg)=0;	
 		virtual void Run()=0;
 		virtual void SendCmd(CCommand &cCmd, int32_t iThreadNum = 0)=0;	
 		virtual void PostCmd(CCommand &cCmd, int32_t iThreadNum = 0)=0;
@@ -170,7 +178,7 @@ namespace NSQTOOL
 		{
 			for (int i = 0; i < m_iTotalThreadNum; ++i)
 			{
-				m_pThread[i].Run();
+				(&m_pThread[i])->Run();
 			}
 		}
 
@@ -225,13 +233,16 @@ namespace NSQTOOL
 	public:
 		void RegisterThreadPool(CThreadPoolInterface *pThreadPool)
 		{
+            fprintf(stdout, "threadtype = %d\n", pThreadPool->GetThreadType());
 			m_mapThreadPool[pThreadPool->GetThreadType()] = pThreadPool;
 		}
 
 		void SendCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum) 
 		{
+            fprintf(stdout, "SendCmd threadtype = %d\n", iThreadType);
 			if (m_mapThreadPool[iThreadType] != NULL)
 			{
+                fprintf(stdout, "is not NULL\n");
 				m_mapThreadPool[iThreadType]->SendCmd(cCmd, iThreadNum);
 			}
 		}

@@ -47,6 +47,7 @@ namespace NSQTOOL
 
 		int32_t Init(void *pArg)
 		{
+            CThread::Init(pArg);
 			m_pEventBase = event_base_new();			
 		}
 
@@ -90,8 +91,9 @@ namespace NSQTOOL
 			return iRet;
 		}
 
-		void ProcessCmd(CCommand *pCmd)
+		void RealProcessCmd(CCommand *pCmd)
 		{
+            fprintf(stdout, "NetThread::ProcessCmd(cmd)\n");
 			switch(pCmd->GetCmdType())
 			{
 				case NET_CONNECT_TYPE:
@@ -187,13 +189,15 @@ namespace NSQTOOL
 		
 		void RealRun()
 		{
+            fprintf(stdout, "CNetThread RealRun\n");
 			while (!m_bStop)	
 			{
-				CThread::ProcessCmd();
+				CThread::ProcessCmd(this);
 				struct timeval sTm; 
 				sTm.tv_sec =1;
 				sTm.tv_usec = 0;
 				event_base_loopexit(m_pEventBase, &sTm);	
+                  event_base_dispatch(m_pEventBase);
 			}
 		}
 
@@ -214,15 +218,23 @@ namespace NSQTOOL
 			int32_t m_iDstThreadNum;
 		};
 
+		int32_t Init(void *pArg)
+		{
+            CThread::Init(pArg);
+			m_pEventBase = event_base_new();			
+		}
+
 		void RealRun()
 		{
+            fprintf(stdout, "CListenThread RealRun\n");
 			while (!m_bStop)	
 			{
-				CThread::ProcessCmd();
+				ProcessCmd(this);
 				struct timeval sTm; 
 				sTm.tv_sec =1;
 				sTm.tv_usec = 0;
 				event_base_loopexit(m_pEventBase, &sTm);	
+                  event_base_dispatch(m_pEventBase);
 			}
 		}
 
@@ -236,12 +248,14 @@ namespace NSQTOOL
 					cCmd,pThis->m_mapListen[evconnlistener_get_fd(pListener)].m_iDstThreadNum);
 		}
 		
-		void ProcessCmd(CCommand *pCmd)
+		void RealProcessCmd(CCommand *pCmd)
 		{
+             fprintf(stdout, "NET_LISTEN_TYPE\n");
 			switch(pCmd->GetCmdType())
 			{
 				case NET_LISTEN_TYPE:
 				{
+                    fprintf(stdout, "NET_LISTEN_TYPE\n");
 					sockaddr_in *pAddr = (sockaddr_in *)pCmd->GetLData();		
 					char buff[1024];
 					snprintf(buff, sizeof(buff), "%s_%d", inet_ntoa(pAddr->sin_addr), pAddr->sin_port);
