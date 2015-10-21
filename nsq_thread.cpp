@@ -26,7 +26,7 @@ name NSQTOOL
 
     int32_t CThread::GetThreadId()
     {
-        return m_tid;
+        return m_iThreadId;
     }
     
     int32_t  CThread::GetThreadType()
