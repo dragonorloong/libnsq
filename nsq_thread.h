@@ -19,11 +19,11 @@ namespace NSQTOOL
 		virtual int32_t Init(int32_t iThreadType, int32_t iThreadId, void *pArg = NULL);
 		int32_t GetThreadId();
 		int32_t GetThreadType();
-		//异步消息
-		void SendCmd(const CCommand &cCmd);
 		//同步消息
-		void PostCmd(const CCommand &cCmd);
-		virtual void RealProcessCmd(const CCommand &cCmd);
+		void SendCmd(CCommand &cCmd);
+		//异步消息
+		void PostCmd(CCommand &cCmd);
+		virtual void RealProcessCmd(CCommand &cCmd);
 		int32_t ProcessCmd();
 		virtual void RealRun();
 		void Run();
@@ -57,7 +57,7 @@ namespace NSQTOOL
 	public:		
         ~CThreadPool()
         {
-            delete [] T;    
+            delete [] m_pThread;    
         }
 
 		int32_t Init(uint32_t iThreadType, uint32_t iNum, void *pArg)	

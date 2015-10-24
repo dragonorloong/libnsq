@@ -1,5 +1,5 @@
 #include "net_thread.h"
-name NSQTOOL
+namespace NSQTOOL
 {
     CThread::CThread()
     {
@@ -35,15 +35,15 @@ name NSQTOOL
     }
 
     //同步消息
-    void CThread::SendCmd(const CCommand &cCmd)
+    void CThread::SendCmd(CCommand &cCmd)
     {
         pthread_mutex_lock(&m_mutex2);
-        RealProcessCmd(&cCmd);
+        RealProcessCmd(cCmd);
         pthread_mutex_unlock(&m_mutex2);
     }
     
     //异步消息
-    void CThread::PostCmd(const CCommand &cCmd)
+    void CThread::PostCmd(CCommand &cCmd)
     {
         pthread_mutex_lock(&m_mutex);
         m_lstCmd.push_back(cCmd);
@@ -56,7 +56,7 @@ name NSQTOOL
         pthread_mutex_unlock(&m_mutex);
     }
     
-    void CThread::RealProcessCmd(const CCommand &cCmd)
+    void CThread::RealProcessCmd(CCommand &cCmd)
     {
        // fprintf(stdout, "CThread::ProcessCmd(cmd)\n");
         if (cCmd.GetCmdType() == STOP_TYPE)
@@ -105,12 +105,13 @@ name NSQTOOL
             }
         }	
 
-        pthread_signal(&m_condWait);
+        pthread_cond_signal(&m_condWait);
     }
 
     void CThread::Run()
     {
-        pthread_create(&m_tid, NULL, ThreadFunc, this);	
+        static pthread_t tid;
+        pthread_create(&tid, NULL, ThreadFunc, this);	
     }
     
     void CThread::Stop()

@@ -11,7 +11,7 @@ APP_TYPE = BIN
 INCLUDE = -I/usr/local/include/event2  -L/usr/local/lib64
 
 #Link lib 
-LINK_LIB = -lpthread -lrt -L./bin/ -ldata_test -L/usr/local/lib -levent
+LINK_LIB = -L./bin/ -ldata_test -L/usr/local/lib -levent -lrt  -lpthread -g
 
 #Install Path
 INSTALL_PATH = 
@@ -26,7 +26,7 @@ OBJ_PATH = obj
 CXX = g++
 
 #Options
-CFLAGS =  
+CFLAGS = -g 
 
 #Obj and bin directory Judge
 ifeq ($(strip $(BIN_PATH)),)

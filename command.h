@@ -20,9 +20,9 @@ namespace NSQTOOL
 		struct CCmdAddr
 		{
 			pthread_t m_iSrcTid;
-			int32_t m_iSrcThreadType;			
+			int32_t m_iSrcType;			
 			pthread_t m_iDstTid;
-			pthread_t m_iDstThreadType;
+			pthread_t m_iDstType;
 		};
 
 		CCommand(uint32_t iType):m_iCmdType(iType),m_pLData(NULL), m_pRData(NULL)

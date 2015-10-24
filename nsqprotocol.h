@@ -12,7 +12,7 @@
 using namespace std;
 namespace NSQTOOL
 {
-	class CNsqdRequest:public CData
+	class CNsqdRequest
 	{
 	public:
 		void Megic(const char *chMegic = "  V2")
@@ -105,21 +105,6 @@ namespace NSQTOOL
 			return m_strBuff;	
 		}
 
-		int32_t Decode()
-		{
-			return 0;
-		}
-		
-		int32_t Need(const char *pData, int32_t iLength)
-		{
-			return -1;
-		}
-
-		int32_t Process()
-		{
-			return -1;
-		}
-
 	private:
 		string m_strBuff;
 	};
@@ -170,7 +155,9 @@ namespace NSQTOOL
 		}
 
 		int32_t Need(const char *pData, int32_t iLength);
-		int32_t Process();
+        int32_t Process(CNetThread::SNetContext *pContext, CNetThread *pThread);
+        void OnConnect(CNetThread::SNetContext *pContext, CNetThread *pThread);
+        void OnError(CNetThread::SNetContext *pContext, CNetThread *pThread, short iEvent);
 	public:
 
 		uint32_t GetFrameType()
@@ -215,12 +202,11 @@ namespace NSQTOOL
 		uint16_t	m_iAttempts;
 		string		m_strMsgId;
 		string		m_strBody;
-
-		string		m_strResponse;
+        string      m_strResponse;
 	};
 
 	// 每个 Record 只能是一种类型：请求包或者应答包
-	class CNsqLookupMsg:public CData
+/*	class CNsqLookupMsg:public CData
 	{
 	public:
 		struct SProducers
@@ -238,7 +224,7 @@ namespace NSQTOOL
 
 		int32_t Size()
 		{
-		/*	if(m_type==0)
+			if(m_type==0)
 			{
 				return m_httpMsgResponse.Size();
 			}
@@ -246,12 +232,12 @@ namespace NSQTOOL
 			{
 				return m_httpMsgRequest.Size();
 			}
-		*/
+		
 		}
 
 		int32_t Encode(char *buf, int32_t &buflen)
 		{
-		/*	if(NULL != buf)
+			if(NULL != buf)
 			{
 				if(m_type==0)
 				{
@@ -262,13 +248,13 @@ namespace NSQTOOL
 					return m_httpMsgRequest.Encode(buf, buflen);
 				}
 			}
-		*/
+		
 			return -1;
 		}
 
 		int32_t Decode(const char *buf, int32_t buflen)
 		{
-		/*
+		
 			if(NULL != buf)
 			{
 				if(strncmp("HTTP",buf,4)==0)
@@ -290,13 +276,13 @@ namespace NSQTOOL
 					return m_httpMsgRequest.Decode(buf, buflen);
 				}
 			}
-		*/
+		
 			return -1;
 		}
 
 		int32_t DecodeResponseBody()
 		{
-		/*	const char *chBody = m_httpMsgResponse.GetBody().c_str();
+			const char *chBody = m_httpMsgResponse.GetBody().c_str();
 			Json::Reader reader;
 			Json::Value root;
 
@@ -346,11 +332,11 @@ namespace NSQTOOL
 				m_vecProducers.push_back(item);
 			}
 
-		*/
+		
 			return 0;
 		}
 		
-		/*CHttpMsgRequest &GetHttpRequest()
+		CHttpMsgRequest &GetHttpRequest()
 		{
 			m_type=1;
 		//	return m_httpMsgRequest;
@@ -361,7 +347,7 @@ namespace NSQTOOL
 			m_type=0;
 		//	return m_httpMsgResponse;
 		}
-		*/
+	
 		// 0-应答包;1-请求包;-1-未初始化
 		int32_t GetMsgType()
 		{
@@ -396,5 +382,6 @@ namespace NSQTOOL
 		// 1 request, 0 response
 		int32_t          m_type;
 	};
+    */
 };
 #endif

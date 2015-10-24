@@ -11,7 +11,7 @@ APP_TYPE = LIB
 INCLUDE = -I/usr/local/include/event2  -L/usr/local/lib64
 
 #Link lib 
-LINK_LIB = /usr/local/lib/libevent.a
+LINK_LIB = 
 
 #Install Path
 INSTALL_PATH = 
@@ -26,7 +26,7 @@ OBJ_PATH = obj
 CXX = g++
 
 #Options
-CFLAGS =  
+CFLAGS = -g  
 
 #Obj and bin directory Judge
 ifeq ($(strip $(BIN_PATH)),)
@@ -44,7 +44,7 @@ endif
 #Dest Splice
 ifeq "$(strip $(APP_TYPE))" "SO"
 	DEST=$(BIN_PATH)/lib$(APP).so
-	LINKER = $(CXX)  $(CFLAGS)  -o $(DEST)
+	LINKER = $(CXX) -o $(DEST)
 	CFLAGS+= -fPIC -shared
 else
 	ifeq "$(strip $(APP_TYPE))" "LIB"
@@ -86,7 +86,7 @@ init:
 	@mkdir -p $(OBJ_PATH)
 
 $(DEST):$(OBJ)
-	$(LINKER) $(CFLAGS)  $^ $(LINK_LIB)
+	$(LINKER)  $^ $(LINK_LIB)
 
 $(OBJ):$(OBJ_PATH)/%.o:%.cpp
 	$(CXX) $(CFLAGS) $(INCLUDE) $< -c -o  $@ 											
