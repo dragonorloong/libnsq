@@ -3,11 +3,12 @@
 #include <string>
 #include <arpa/inet.h>
 #include "protocol.h"
-//#include "json/json.h" 
+#include "json/json.h" 
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <vector>
+#include "httpprotocol.h"
 
 using namespace std;
 namespace NSQTOOL
@@ -109,7 +110,7 @@ namespace NSQTOOL
 		string m_strBuff;
 	};
 
-	class CNsqdResponse:public CData
+	class CNsqdResponse:public CHttpResponse 
 	{
 	public:	
 		enum {FrameTypeResponse, FrameTypeError, FrameTypeMessage};
@@ -133,7 +134,7 @@ namespace NSQTOOL
 				m_iTimestamp = (int64_t)ntoh64((uint8_t*)(buf+8));
 				m_iAttempts = ntohs(*(uint16_t *)(buf+16));
 				m_strMsgId = string(buf+18, 16);
-				m_strBody = string(buf+34, m_iTotalLen - 34 + 4);
+				m_strMsgBody = string(buf+34, m_iTotalLen - 34 + 4);
 			}
 			else if (m_iFrameType == FrameTypeResponse)
 			{
@@ -180,9 +181,9 @@ namespace NSQTOOL
 			return m_strMsgId;	
 		}
 
-		string &GetBody()
+		string &GetMsgBody()
 		{
-			return m_strBody;	
+			return m_strMsgBody;	
 		}
 
 		string &GetResponce()
@@ -201,12 +202,12 @@ namespace NSQTOOL
 		int64_t		m_iTimestamp;
 		uint16_t	m_iAttempts;
 		string		m_strMsgId;
-		string		m_strBody;
+		string		m_strMsgBody;
         string      m_strResponse;
 	};
 
 	// 每个 Record 只能是一种类型：请求包或者应答包
-/*	class CNsqLookupMsg:public CData
+	class CNsqLookupResponse:public CHttpResponse
 	{
 	public:
 		struct SProducers
@@ -218,142 +219,13 @@ namespace NSQTOOL
 			string m_strVersion;
 		};
 
-		CNsqLookupMsg():m_type(-1){}
-		int32_t Need(const char *pData, int32_t iLength);
-		int32_t Process();
+        int32_t Process(CNetThread::SNetContext *pContext, CNetThread *pThread);
+        void OnConnect(CNetThread::SNetContext *pContext, CNetThread *pThread);
+        void OnError(CNetThread::SNetContext *pContext, CNetThread *pThread, short iEvent);
 
-		int32_t Size()
-		{
-			if(m_type==0)
-			{
-				return m_httpMsgResponse.Size();
-			}
-			else
-			{
-				return m_httpMsgRequest.Size();
-			}
+
+		int32_t DecodeResponseBody();
 		
-		}
-
-		int32_t Encode(char *buf, int32_t &buflen)
-		{
-			if(NULL != buf)
-			{
-				if(m_type==0)
-				{
-					return m_httpMsgResponse.Encode(buf, buflen);
-				}
-				else
-				{
-					return m_httpMsgRequest.Encode(buf, buflen);
-				}
-			}
-		
-			return -1;
-		}
-
-		int32_t Decode(const char *buf, int32_t buflen)
-		{
-		
-			if(NULL != buf)
-			{
-				if(strncmp("HTTP",buf,4)==0)
-				{
-					fprintf(stdout,"%s len=%d\n",buf,buflen);
-					m_type=0;
-
-					if (m_httpMsgResponse.Decode(buf, buflen) == 0)
-					{
-						return DecodeResponseBody();
-					}
-
-					return -1;
-				}
-				else
-				{
-					fprintf(stdout,"%s len=%d\n",buf,buflen);
-					m_type=1;
-					return m_httpMsgRequest.Decode(buf, buflen);
-				}
-			}
-		
-			return -1;
-		}
-
-		int32_t DecodeResponseBody()
-		{
-			const char *chBody = m_httpMsgResponse.GetBody().c_str();
-			Json::Reader reader;
-			Json::Value root;
-
-			
-			if (!reader.parse(chBody, root))
-			{
-				LOG4CPLUS_DEBUG(logger, "parse root failed!");
-				return -1;
-			}
-
-			m_strStatus = root["status_code"].asString();
-			m_strStatusTxt = root["status_txt"].asString();
-
-			if (m_strStatus != "200")
-			{
-				LOG4CPLUS_DEBUG(logger, "response return failed errorinfo is:" << m_strStatusTxt);
-				return 0;
-			}
-
-			const Json::Value data = root["data"];
-			const Json::Value channel = data["channels"];
-
-			LOG4CPLUS_DEBUG(logger, "channel size = " << channel.size());
-
-			for (size_t i = 0; i < channel.size(); ++i)
-			{
-				LOG4CPLUS_DEBUG(logger, "index = " << i << " channel = " << channel[int(i)].asString());
-				m_vecChannels.push_back(channel[int(i)].asString());	
-			}
-
-			const Json::Value producers = data["producers"];
-			LOG4CPLUS_DEBUG(logger, "producers size = " << producers.size());
-
-			for (size_t i = 0; i < producers.size(); ++i)
-			{
-				SProducers item;
-				item.m_strBroadcastAddres = producers[int(i)]["broadcast_address"].asString();
-				item.m_strHostName = producers[int(i)]["hostname"].asString();
-				item.m_iTcpPort = producers[int(i)]["tcp_port"].asInt();
-				item.m_iHttpPort = producers[int(i)]["http_port"].asInt();
-				item.m_strVersion = producers[int(i)]["version"].asString();
-
-
-				LOG4CPLUS_DEBUG(logger, "broadcastAddres =  " << item.m_strBroadcastAddres << " host = " 
-							<< item.m_strHostName << " tcpPort = " << item.m_iTcpPort 
-							<< " httpPort = " << item.m_iHttpPort << " version = " << item.m_strVersion) ;
-				m_vecProducers.push_back(item);
-			}
-
-		
-			return 0;
-		}
-		
-		CHttpMsgRequest &GetHttpRequest()
-		{
-			m_type=1;
-		//	return m_httpMsgRequest;
-		}
-
-		CHttpMsgResponse &GetHttpResponse()
-		{
-			m_type=0;
-		//	return m_httpMsgResponse;
-		}
-	
-		// 0-应答包;1-请求包;-1-未初始化
-		int32_t GetMsgType()
-		{
-			return m_type;
-		}
-
 		string &GetStatus()
 		{
 			return m_strStatus;	
@@ -379,9 +251,6 @@ namespace NSQTOOL
 		string m_strStatusTxt;
 		vector<string> m_vecChannels;
 		vector<SProducers> m_vecProducers;
-		// 1 request, 0 response
-		int32_t          m_type;
 	};
-    */
 };
 #endif

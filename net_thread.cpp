@@ -39,7 +39,6 @@ namespace NSQTOOL
 
         while (iNeedLength == 0)
         {
-            sleep(1);
             pContext->m_pPkg->Process(pContext, pThis);	
             pContext->m_pPkg->NextPkg();
             iNeedLength = pContext->m_pPkg->Need(NULL, 0);

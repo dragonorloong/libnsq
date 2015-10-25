@@ -13,6 +13,8 @@ namespace NSQTOOL
                 return new CDataTest();
             case 2:
                 return new CNsqdResponse();
+            case 3:
+                return new CNsqLookupResponse();
         }
 		return NULL;
 	}

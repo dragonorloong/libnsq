@@ -1,5 +1,5 @@
 #source file
-SRC = command.cpp net_thread.cpp nsq_thread.cpp nsqprotocol.cpp protocol.cpp tool.cpp 
+SRC = command.cpp net_thread.cpp nsq_thread.cpp nsqprotocol.cpp protocol.cpp tool.cpp httpprotocol.cpp
 
 #Application name
 APP = data_test
@@ -8,8 +8,8 @@ APP = data_test
 APP_TYPE = LIB 
 
 #Include
-INCLUDE = -I/usr/local/include/event2  -L/usr/local/lib64
-
+INCLUDE = -I/usr/local/include/event2    
+#-I/usr/local/include/json
 #Link lib 
 LINK_LIB = 
 

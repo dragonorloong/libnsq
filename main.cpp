@@ -1,7 +1,7 @@
 /*************************************************************************
 	> File Name: main.cpp
-	> Author: longhongbo 
-	> Mail: longhongbo@xunlei.com
+	> Author: EastQ 
+	> Mail: log2013@163.com 
 	> Created Time: 2015年10月19日 星期一 22时11分49秒
  ************************************************************************/
 
@@ -30,8 +30,8 @@ int main()
     CCommand cmd(NET_CONNECT_TYPE);
     CNetThread::SNetContext *pNetContext = new CNetThread::SNetContext;
     pNetContext->m_strHost = "127.0.0.1";
-    pNetContext->m_iPort = 4150;
-    pNetContext->m_iPkgType = 2;
+    pNetContext->m_iPort = 4161;
+    pNetContext->m_iPkgType = 3;
     pNetContext->m_cAddr.m_iDstType = 2;
     pNetContext->m_cAddr.m_iDstTid = 0;
     cmd.SetLData(pNetContext);
