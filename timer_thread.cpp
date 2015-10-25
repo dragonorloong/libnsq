@@ -1,0 +1,113 @@
+/*************************************************************************
+	> File Name: timer_thread.cpp
+	> Author: 
+	> Mail: 
+	> Created Time: 2015年10月25日 星期日 21时05分32秒
+ ************************************************************************/
+
+#include "timer_thread.h"
+
+namespace NSQTOOL
+{
+    
+int32_t CTimerThread::Init(int32_t iThreadType, int32_t iThreadId, void *pArg)
+{
+        CThread::Init(iThreadType, iThreadId, pArg);
+        m_pEventBase = event_base_new();			
+}
+
+void CTimerThread::RealRun()
+{ 
+    fprintf(stdout, "CTimerThread RealRun\n");
+
+    while (!m_bStop)	
+    {
+        CThread::ProcessCmd();
+
+        if (m_bStop)
+        {
+           pthread_cond_signal(&m_condWait); 
+           break;
+        }
+
+        //1ms返回一次，所有有关net的thread通讯，时延在ms级别,建议通过send命令直接发送
+        struct timeval sTm; 
+        sTm.tv_sec =0;
+        sTm.tv_usec = 1000;
+        event_base_loopexit(m_pEventBase, &sTm);	
+        event_base_dispatch(m_pEventBase);
+    }
+}
+
+void CTimerThread::OnStaticTimeOut(int iHandle, short iEvent, void *pArg)
+{
+    CTimerThread *pThis = ((STimerInfo *)pArg)->m_pThis;
+    pThis->OnTimeOut(iHandle, iEvent, pArg);
+}
+
+void CTimerThread::OnTimeOut(int iHandle, short iEvent, void *pArg)
+{
+    pthread_mutex_lock(&m_mutex);
+    STimerInfo *pTimer = (STimerInfo *)pArg;
+    char buff[64] = {0};
+    snprintf(buff, sizeof(buff), "%d_%d_%d", 
+            pTimer->m_iDstType, pTimer->m_iDstTid, pTimer->m_iCmdType);
+
+    CCommand cmd(pTimer->m_iCmdType);
+    CCommand::CCmdAddr cAddr;
+    cAddr.m_iDstType = pTimer->m_iDstType;
+    cAddr.m_iDstTid = pTimer->m_iDstTid;
+    cmd.SetAddr(cAddr);
+    CThreadMgrSingleton::GetInstance()->PostCmd(cAddr.m_iSrcType, cmd, cAddr.m_iSrcTid);
+
+    if ((pTimer->m_iPersist == 0) && (m_mapTimer[buff] != NULL))
+    {
+        event_free(m_mapTimer[buff]->m_pEvent);
+        delete m_mapTimer[buff];
+        m_mapTimer.erase(buff);
+    }
+
+    pthread_mutex_unlock(&m_mutex);
+}
+
+void CTimerThread::RealProcessCmd(CCommand &cCmd)
+{
+    fprintf(stdout, "CTimerThread::RealProcessCmd\n");    
+    pthread_mutex_lock(&m_mutex);
+
+    switch(cCmd.GetCmdType())
+    {
+        case TIMER_ADD_TYPE:
+        {
+            STimerInfo *pTimer = (STimerInfo *)cCmd.GetLData();
+            event *pEvent = event_new(m_pEventBase, -1, EV_PERSIST, OnStaticTimeOut,this);
+            evtimer_add(pEvent, &pTimer->m_cTimeval);
+            char buff[64] = {0};
+            snprintf(buff, sizeof(buff), "%d_%d_%d", 
+                    pTimer->m_iDstType, pTimer->m_iDstTid, pTimer->m_iCmdType);
+            pTimer->m_pEvent = pEvent;
+            m_mapTimer[buff] = pTimer;
+        }
+        break;
+        case TIMER_DEL_TYPE:
+        {
+            STimerInfo *pTimer = (STimerInfo *)cCmd.GetLData();
+            char buff[64] = {0};
+            snprintf(buff, sizeof(buff), "%d_%d_%d", 
+                    pTimer->m_iDstType, pTimer->m_iDstTid, pTimer->m_iCmdType);
+
+            if (m_mapTimer[buff] != NULL)
+            {
+                event_free(m_mapTimer[buff]->m_pEvent);
+                delete m_mapTimer[buff];
+                m_mapTimer.erase(buff);
+            }
+
+            delete pTimer;
+        }
+    }
+
+    pthread_mutex_unlock(&m_mutex);
+}
+
+};
