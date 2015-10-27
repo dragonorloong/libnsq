@@ -55,9 +55,25 @@ namespace NSQTOOL
 	class CThreadPool:public CThreadPoolInterface
 	{
 	public:		
+        CThreadPool()
+        {
+		    m_pThread = NULL;
+		    m_iTotalThreadNum = 0;
+		    m_iCurrentNum = 0;
+		    m_iThreadType = 0;
+            m_bIsAdd = false;
+        }
+
         ~CThreadPool()
         {
-            delete [] m_pThread;    
+            if (m_bIsAdd)
+            {
+                delete m_pThread;
+            }
+            else
+            {
+                delete [] m_pThread;    
+            }
         }
 
 		int32_t Init(uint32_t iThreadType, uint32_t iNum, void *pArg)	
@@ -73,11 +89,22 @@ namespace NSQTOOL
 			}
 		}
 
+        void Add(uint32_t iThreadType, T *pThis)
+        {
+            m_pThread = pThis;
+            m_iThreadType = iThreadType;
+            m_iTotalThreadNum = 1;
+            m_bIsAdd = true;
+        }
+
 		void Run()
 		{
 			for (int i = 0; i < m_iTotalThreadNum; ++i)
 			{
-				(&m_pThread[i])->Run();
+                if (!m_bIsAdd)
+                {
+				    (&m_pThread[i])->Run();
+                }
 			}
 		}
 
@@ -119,6 +146,7 @@ namespace NSQTOOL
 		uint32_t m_iTotalThreadNum;
 		uint64_t m_iCurrentNum;
 		uint32_t m_iThreadType;
+        bool m_bIsAdd;
 	};
 
 	class CThreadMgr
@@ -134,6 +162,7 @@ namespace NSQTOOL
 		void SendCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum); 
 		void PostCmd(uint32_t iThreadType, CCommand &cCmd, uint32_t iThreadNum); 
 		void Stop();
+        void Run();
 	private:
 		std::map<int32_t, CThreadPoolInterface*> m_mapThreadPool;
 	};

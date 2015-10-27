@@ -106,6 +106,7 @@ namespace NSQTOOL
     void CNetThread::RealProcessCmd(CCommand &cCmd)
     {
         fprintf(stdout, "NetThread::ProcessCmd(cmd)\n");
+        sleep(10);
         switch(cCmd.GetCmdType())
         {
             case NET_CONNECT_TYPE:

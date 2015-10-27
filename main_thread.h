@@ -8,9 +8,21 @@
 #ifndef _MAIN_THREAD_H
 #define _MAIN_THREAD_H
 #include "nsq_thread.h"
-class CMainThread:public CThread
+namespace NSQTOOL
 {
+    class CMainThread:public CThread
+    {
+    public:
+        enum MAINTHREADTIMER
+        {
+            LOOKUP_TIMER = 1,
+        };
 
+        void RealProcessCmd(CCommand &cCmd); 
+        void RealRun(); 
+    private:
+    };
+        
 };
 
 #endif

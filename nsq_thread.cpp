@@ -50,6 +50,7 @@ namespace NSQTOOL
         
         if (m_lstCmd.size() == 1)
         {
+            fprintf(stdout, "post size = 1, type = %d, signal\n", m_iThreadType);
             pthread_cond_signal(&m_cond);
         }
 
@@ -68,6 +69,8 @@ namespace NSQTOOL
     
     int32_t CThread::ProcessCmd()
     {
+        if (m_iThreadType = -4)
+        fprintf(stdout, "ProcessCmd size = %d, type = %d\n", m_lstCmd.size(), m_iThreadType);
         int32_t iRet = 0;
         
         while (m_lstCmd.size() != 0)
@@ -76,6 +79,8 @@ namespace NSQTOOL
             
             if (m_lstCmd.size() == 0)
             {
+                fprintf(stdout, "size() reset 0 type = %d\n", m_iThreadType);
+                pthread_mutex_lock(&m_mutex);
                 return iRet;
             }
             
@@ -84,6 +89,7 @@ namespace NSQTOOL
             pthread_mutex_unlock(&m_mutex);
             
             pthread_mutex_lock(&m_mutex2);
+            fprintf(stdout, "realProcesCmd type = %d\n", m_iThreadType);
             RealProcessCmd(cCmd);
             pthread_mutex_unlock(&m_mutex2);
             
@@ -101,7 +107,9 @@ namespace NSQTOOL
             
             if (iRet ==0 && !m_bStop)
             {
+                fprintf(stdout, "size = 0, type = %d, wait\n", m_iThreadType);
                 pthread_cond_wait(&m_cond, &m_mutex);
+                fprintf(stdout, "size = 1, alive, type = %d\n", m_iThreadType);
             }
         }	
 
@@ -139,7 +147,7 @@ namespace NSQTOOL
     void CThreadMgr::SendCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum) 
     {
         fprintf(stdout, "SendCmd threadtype = %d\n", iThreadType);
-        if (m_mapThreadPool[iThreadType] != NULL)
+        if (m_mapThreadPool.find(iThreadType) != m_mapThreadPool.end())
         {
             fprintf(stdout, "is not NULL\n");
             m_mapThreadPool[iThreadType]->SendCmd(cCmd, iThreadNum);
@@ -148,8 +156,10 @@ namespace NSQTOOL
 
     void CThreadMgr::PostCmd(uint32_t iThreadType, CCommand &cCmd, uint32_t iThreadNum) 
     {
-        if (m_mapThreadPool[iThreadType] != NULL)
+        fprintf(stdout, "CThreadMgr::PostCmd begin iThreadType = %d\n", iThreadType);
+        if (m_mapThreadPool.find(iThreadType) != m_mapThreadPool.end())
         {
+            fprintf(stdout, "CThreadMgr::PostCmd is not null\n");
             m_mapThreadPool[iThreadType]->PostCmd(cCmd, iThreadNum);
         }
     }
@@ -165,4 +175,15 @@ namespace NSQTOOL
             iter = m_mapThreadPool.begin();
         }
     } 
+
+    void CThreadMgr::Run()
+    {
+        std::map<int32_t, CThreadPoolInterface*>::iterator iter = m_mapThreadPool.begin();
+
+        for (; iter != m_mapThreadPool.end(); ++iter)
+        {
+            iter->second->Run();
+        }
+    }
+    
 };

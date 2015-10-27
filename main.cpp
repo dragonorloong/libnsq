@@ -12,14 +12,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include "main_thread.h"
 using namespace std;
 using namespace NSQTOOL;
-int32_t g_iListenType = 1;
-int32_t g_iRecvType = 2;
+int g_iListenType = 1;
+int g_iRecvType = 2;
 
 int main()
 {
-    CThreadPool<CListenThread> *pListenThreadPool = new CThreadPool<CListenThread>();
+  /*  CThreadPool<CListenThread> *pListenThreadPool = new CThreadPool<CListenThread>();
     pListenThreadPool->Init(g_iListenType, 1, NULL);
     CThreadMgrSingleton::GetInstance()->RegisterThreadPool(pListenThreadPool);
     CThreadPool<CNetThread> *pNetThreadPool = new CThreadPool<CNetThread>();
@@ -40,6 +41,13 @@ int main()
     cCmdAddr.m_iDstType = 2;
     cmd.SetAddr(cCmdAddr);
     CThreadMgrSingleton::GetInstance()->PostCmd(g_iRecvType, cmd, 0);
+  */  
+    CMainThread *pThread = new CMainThread;
+    pThread->Init(MAIN_THREAD_TYPE, 0, NULL);
+    pThread->Run();
+   
+
+    while(1)
     sleep(100);
 }
 

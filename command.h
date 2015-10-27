@@ -7,12 +7,22 @@ namespace NSQTOOL
 	enum EInternalCmdType
 	{
 		STOP_TYPE = -1,
-		NET_CONNECT_TYPE = 0,
-		NET_LISTEN_TYPE = 1,
-		NET_DEL_TYPE = 2,
-		NET_ADD_TYPE = 3,
-		NET_SEND_TYPE = 4,
+		NET_CONNECT_TYPE = -2,
+		NET_LISTEN_TYPE = -3,
+		NET_DEL_TYPE = -4,
+		NET_ADD_TYPE = -5,
+		NET_SEND_TYPE = -6,
+        TIMER_ADD_TYPE = -8,
+        TIMER_DEL_TYPE = -9
 	};
+
+    enum EInternalThreadType
+    {
+        NET_THREAD_TYPE = -1,
+        LISTEN_THREAD_TYPE = -2,
+        TIMER_THREAD_TYPE = -3,
+        MAIN_THREAD_TYPE = -4,
+    };
 
 	class CCommand
 	{
@@ -80,5 +90,5 @@ namespace NSQTOOL
 		void *m_pRData;
 		CCmdAddr m_cAddr;
 	}; 
-}
+};
 #endif

@@ -1,5 +1,5 @@
 #source file
-SRC = command.cpp net_thread.cpp nsq_thread.cpp nsqprotocol.cpp protocol.cpp tool.cpp httpprotocol.cpp
+SRC = command.cpp net_thread.cpp nsq_thread.cpp nsqprotocol.cpp protocol.cpp tool.cpp httpprotocol.cpp timer_thread.cpp main_thread.cpp
 
 #Application name
 APP = data_test
