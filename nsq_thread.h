@@ -43,12 +43,12 @@ namespace NSQTOOL
 	class CThreadPoolInterface
 	{
 	public:
-		virtual int32_t Init(uint32_t iThreadType, uint32_t iNum, void *pArg)=0;	
+		virtual int32_t Init(int32_t iThreadType, int32_t iNum, void *pArg)=0;	
 		virtual void Run()=0;
 		virtual void SendCmd(CCommand &cCmd, int32_t iThreadNum = 0)=0;	
 		virtual void PostCmd(CCommand &cCmd, int32_t iThreadNum = 0)=0;
 		virtual void Stop()=0;
-		virtual uint32_t GetThreadType() = 0;
+		virtual int32_t GetThreadType() = 0;
 	};
 
 	template<typename T>
@@ -76,7 +76,7 @@ namespace NSQTOOL
             }
         }
 
-		int32_t Init(uint32_t iThreadType, uint32_t iNum, void *pArg)	
+		int32_t Init(int32_t iThreadType, int32_t iNum, void *pArg)	
 		{
 			m_iThreadType = iThreadType;
 			m_iCurrentNum = 0;
@@ -89,7 +89,7 @@ namespace NSQTOOL
 			}
 		}
 
-        void Add(uint32_t iThreadType, T *pThis)
+        void Add(int32_t iThreadType, T *pThis)
         {
             m_pThread = pThis;
             m_iThreadType = iThreadType;
@@ -136,16 +136,16 @@ namespace NSQTOOL
 			}
 		}
 
-		uint32_t GetThreadType()
+		int32_t GetThreadType()
 		{
 			return m_iThreadType;
 		}
 
 	private:
 		T *m_pThread;
-		uint32_t m_iTotalThreadNum;
+		int32_t m_iTotalThreadNum;
 		uint64_t m_iCurrentNum;
-		uint32_t m_iThreadType;
+		int32_t m_iThreadType;
         bool m_bIsAdd;
 	};
 
@@ -160,7 +160,7 @@ namespace NSQTOOL
 	public:
 		void RegisterThreadPool(CThreadPoolInterface *pThreadPool);
 		void SendCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum); 
-		void PostCmd(uint32_t iThreadType, CCommand &cCmd, uint32_t iThreadNum); 
+		void PostCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum); 
 		void Stop();
         void Run();
 	private:

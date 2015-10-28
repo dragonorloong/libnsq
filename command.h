@@ -35,7 +35,7 @@ namespace NSQTOOL
 			pthread_t m_iDstType;
 		};
 
-		CCommand(uint32_t iType):m_iCmdType(iType),m_pLData(NULL), m_pRData(NULL)
+		CCommand(int32_t iType):m_iCmdType(iType),m_pLData(NULL), m_pRData(NULL)
 		{
 		}
 

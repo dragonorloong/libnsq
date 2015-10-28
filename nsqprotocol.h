@@ -24,7 +24,7 @@ namespace NSQTOOL
 		void Indetify(const string  &strIndetifyJson, int len)
 		{
 			m_strBuff += "IDENTIFY\n";
-			uint32_t nLen = htonl(len);
+			int32_t nLen = htonl(len);
 			char buff[4] = {0};
 			memcpy(buff, &nLen, 4);
 			m_strBuff += string(buff, 4);
@@ -40,12 +40,12 @@ namespace NSQTOOL
 			m_strBuff += "\n"; 
 		}
 
-		void PubLish(const string &strTopic, const string &strMsgData, uint32_t len)
+		void PubLish(const string &strTopic, const string &strMsgData, int32_t len)
 		{
 			m_strBuff += "PUB ";
 			m_strBuff += strTopic;
 			m_strBuff += "\n";
-			uint32_t nLen = htonl(len);
+			int32_t nLen = htonl(len);
 			char buff[4] = {0};
 			memcpy(buff, &nLen, 4);
 			m_strBuff += string(buff, 4);
@@ -125,8 +125,8 @@ namespace NSQTOOL
 
 		int32_t Decode(const char *buf, int32_t buflen)
 		{
-			m_iTotalLen = ntohl(*(uint32_t*)buf);	
-			m_iFrameType = ntohl(*(uint32_t*)(buf+4));
+			m_iTotalLen = ntohl(*(int32_t*)buf);	
+			m_iFrameType = ntohl(*(int32_t*)(buf+4));
 
 
 			if (m_iFrameType == FrameTypeMessage)
@@ -161,7 +161,7 @@ namespace NSQTOOL
         void OnError(CNetThread::SNetContext *pContext, CNetThread *pThread, short iEvent);
 	public:
 
-		uint32_t GetFrameType()
+		int32_t GetFrameType()
 		{
 			return m_iFrameType;	
 		}
@@ -197,8 +197,8 @@ namespace NSQTOOL
 		}
 			
 	private:
-		uint32_t	m_iTotalLen;
-		uint32_t	m_iFrameType;
+		int32_t	m_iTotalLen;
+		int32_t	m_iFrameType;
 		int64_t		m_iTimestamp;
 		uint16_t	m_iAttempts;
 		string		m_strMsgId;
@@ -249,8 +249,8 @@ namespace NSQTOOL
 	private:
 		string m_strStatus;
 		string m_strStatusTxt;
-		vector<string> m_vecChannels;
-		vector<SProducers> m_vecProducers;
+		static vector<string> m_vecChannels;
+		static vector<SProducers> m_vecProducers;
 	};
 };
 #endif

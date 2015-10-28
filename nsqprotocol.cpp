@@ -125,6 +125,9 @@ int32_t CNsqLookupResponse::DecodeResponseBody()
         return 0;
     }
 
+    m_vecChannels.clean();
+    m_vecProducers.clean();
+
     const Json::Value data = root["data"];
     const Json::Value channel = data["channels"];
 
@@ -156,7 +159,6 @@ int32_t CNsqLookupResponse::DecodeResponseBody()
 
     return 0;
 }
-
 
 };
 

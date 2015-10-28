@@ -62,10 +62,11 @@ void CTimerThread::OnTimeOut(int iHandle, short iEvent, void *pArg)
     cmd.SetAddr(cAddr);
     fprintf(stdout, "OnTimerOut::PostCmd: type = %d, id = %d\n", cAddr.m_iDstType, cAddr.m_iDstTid);
     CThreadMgrSingleton::GetInstance()->PostCmd(cAddr.m_iDstType, cmd, cAddr.m_iDstTid);
-    fprintf(stdout, "Post end\n");
 
     if ((pTimer->m_iPersist == 0) && (m_mapTimer.find(buff) != m_mapTimer.end()))
     {
+        fprintf(stdout, "del no persist event\n");
+        evtimer_del(m_mapTimer[buff]->m_pEvent);
         event_free(m_mapTimer[buff]->m_pEvent);
         delete m_mapTimer[buff];
         m_mapTimer.erase(buff);
@@ -85,8 +86,9 @@ void CTimerThread::RealProcessCmd(CCommand &cCmd)
         case TIMER_ADD_TYPE:
         {
             STimerInfo *pTimer = (STimerInfo *)cCmd.GetLData();
+            fprintf(stdout, "TIMER_ADD_TYPE:%d\n", pTimer->m_cTimeval.tv_sec);
             event *pEvent = event_new(m_pEventBase, -1, EV_PERSIST, OnStaticTimeOut,pTimer);
-            evtimer_add(pEvent, &pTimer->m_cTimeval);
+            evtimer_add(pEvent, &(pTimer->m_cTimeval));
             char buff[64] = {0};
             snprintf(buff, sizeof(buff), "%d_%d_%d", 
                     pTimer->m_iDstType, pTimer->m_iDstTid, pTimer->m_iCmdType);

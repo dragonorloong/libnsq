@@ -20,6 +20,7 @@ namespace NSQTOOL
     
     int32_t CThread::Init(int32_t iThreadType, int32_t iThreadId, void *pArg)
     {
+        fprintf(stdout, "Init ThreadType = %d, iThreadId = %d\n", iThreadType, iThreadId);
         m_iThreadType = iThreadType;
         m_iThreadId = iThreadId;
     }
@@ -69,8 +70,11 @@ namespace NSQTOOL
     
     int32_t CThread::ProcessCmd()
     {
-        if (m_iThreadType = -4)
-        fprintf(stdout, "ProcessCmd size = %d, type = %d\n", m_lstCmd.size(), m_iThreadType);
+        if (m_iThreadType == -4)
+        {
+            fprintf(stdout, "ProcessCmd size = %d, type = %d\n", m_lstCmd.size(), m_iThreadType);
+        }
+
         int32_t iRet = 0;
         
         while (m_lstCmd.size() != 0)
@@ -80,7 +84,7 @@ namespace NSQTOOL
             if (m_lstCmd.size() == 0)
             {
                 fprintf(stdout, "size() reset 0 type = %d\n", m_iThreadType);
-                pthread_mutex_lock(&m_mutex);
+                pthread_mutex_unlock(&m_mutex);
                 return iRet;
             }
             
@@ -103,12 +107,14 @@ namespace NSQTOOL
     {
         while (!m_bStop)
         {
-            uint32_t iRet = ProcessCmd();
-            
+            int32_t iRet = ProcessCmd();
+            fprintf(stdout, "iType = %d, iRet = %d\n", m_iThreadType, iRet);            
             if (iRet ==0 && !m_bStop)
             {
                 fprintf(stdout, "size = 0, type = %d, wait\n", m_iThreadType);
+                pthread_mutex_lock(&m_mutex);
                 pthread_cond_wait(&m_cond, &m_mutex);
+                pthread_mutex_unlock(&m_mutex);
                 fprintf(stdout, "size = 1, alive, type = %d\n", m_iThreadType);
             }
         }	
@@ -154,7 +160,7 @@ namespace NSQTOOL
         }
     }
 
-    void CThreadMgr::PostCmd(uint32_t iThreadType, CCommand &cCmd, uint32_t iThreadNum) 
+    void CThreadMgr::PostCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum) 
     {
         fprintf(stdout, "CThreadMgr::PostCmd begin iThreadType = %d\n", iThreadType);
         if (m_mapThreadPool.find(iThreadType) != m_mapThreadPool.end())

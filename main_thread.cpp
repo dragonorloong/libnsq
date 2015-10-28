@@ -58,6 +58,7 @@ namespace NSQTOOL
         pTimerInfo->m_iPersist = 1; 
         pTimerInfo->m_iCmdType = LOOKUP_TIMER;
         struct timeval cTimeval = {5, 0};
+        pTimerInfo->m_cTimeval = cTimeval;
         CCommand cmd(TIMER_ADD_TYPE);
         CCommand::CCmdAddr cCmdAddr;
         cCmdAddr.m_iDstTid = 0;
