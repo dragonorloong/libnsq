@@ -249,8 +249,8 @@ namespace NSQTOOL
 	private:
 		string m_strStatus;
 		string m_strStatusTxt;
-		static vector<string> m_vecChannels;
-		static vector<SProducers> m_vecProducers;
+		vector<string> m_vecChannels;
+		vector<SProducers> m_vecProducers;
 	};
 };
 #endif

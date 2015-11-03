@@ -62,6 +62,10 @@ namespace NSQTOOL
         if (iTemp & BEV_EVENT_CONNECTED)
         {
             fprintf(stdout, "the client has connected to server\n");
+            int32_t iHandle = bufferevent_getfd(pBufevt);            
+            CNetThread *pThis = (CNetThread*)arg;	
+            SNetContext *pContext = pThis->m_mapNetContext[bufferevent_getfd(pBufevt)];
+            pContext->m_pPkg->OnConnect(pContext, this);
             pthread_mutex_unlock(&m_mutex);
             return; 
         }
@@ -146,13 +150,13 @@ namespace NSQTOOL
 
                 int iHandle = bufferevent_getfd(bufevt);
                 bufferevent_setcb(bufevt, OnStaticRead, NULL, OnStaticError, this);
-                bufferevent_enable(bufevt, EV_READ|EV_WRITE|EV_PERSIST);		
+                bufferevent_enable(bufevt, EV_READ|EV_PERSIST);		
                 pNetContext->Init(iHandle, bufevt);
                 bufferevent_setwatermark(bufevt, EV_READ, 
                                           pNetContext->m_pPkg->Need(NULL, 0), 0);
                 m_mapNetContext[iHandle] = pNetContext;
                 fprintf(stdout, "test2:iHandle = %d\n", iHandle);
-                pNetContext->m_pPkg->OnConnect(pNetContext, this);
+//                pNetContext->m_pPkg->OnConnect(pNetContext, this);
                 pthread_mutex_unlock(&m_mutex);
 
 /*                //回一个包给源线程
