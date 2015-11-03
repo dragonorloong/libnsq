@@ -80,10 +80,8 @@ void CNsqdResponse::OnError(CNetThread::SNetContext *pContext, CNetThread *pThre
     fprintf(stdout, "OnError, iEvent = %d\n", iEvent);
 }
 
-
 int32_t CNsqLookupResponse::Process(CNetThread::SNetContext *pContext, CNetThread *pThread)
 {
-    
         fprintf(stdout, "CNsqLookupResponse:Process\n");
 		 DecodeResponseBody();
 }
@@ -125,8 +123,8 @@ int32_t CNsqLookupResponse::DecodeResponseBody()
         return 0;
     }
 
-    m_vecChannels.clean();
-    m_vecProducers.clean();
+    m_vecChannels.clear();
+    m_vecProducers.clear();
 
     const Json::Value data = root["data"];
     const Json::Value channel = data["channels"];
