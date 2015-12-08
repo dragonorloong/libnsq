@@ -110,12 +110,13 @@ namespace NSQTOOL
     void CNetThread::RealProcessCmd(CCommand &cCmd)
     {
         fprintf(stdout, "NetThread::ProcessCmd(cmd)\n");
-        sleep(10);
+
+        pthread_mutex_lock(&m_mutex);
+
         switch(cCmd.GetCmdType())
         {
             case NET_CONNECT_TYPE:
             {
-                pthread_mutex_lock(&m_mutex);
                 //只做tcp的connect
                 CNetThread::SNetContext *pNetContext = (CNetThread::SNetContext *)cCmd.GetLData();
             
@@ -127,14 +128,6 @@ namespace NSQTOOL
 
                 fprintf(stdout, "NET_CONNECT_TYPE:%s,%d\n", pNetContext->m_strHost.c_str(), pNetContext->m_iPort);		
 
-/*              int iHandle = socket(AF_INET, SOCK_STREAM, 0);	
-                fprintf(stdout, "test1:iHandle = %d\n", iHandle);
-                
-                if (iHandle == -1)
-                {
-                    fprintf(stderr, "socket return error, errno = %d\n", errno);		
-                }
-*/
                 struct bufferevent * bufevt = bufferevent_socket_new(m_pEventBase, -1, 0);
                 int32_t iRet = bufferevent_socket_connect(bufevt, (sockaddr*)&sAddr, sizeof(sockaddr_in));
                 
@@ -152,31 +145,16 @@ namespace NSQTOOL
                 bufferevent_setcb(bufevt, OnStaticRead, NULL, OnStaticError, this);
                 bufferevent_enable(bufevt, EV_READ|EV_PERSIST);		
                 pNetContext->Init(iHandle, bufevt);
+
+                //设置读入最低水位，防止无效回调
                 bufferevent_setwatermark(bufevt, EV_READ, 
                                           pNetContext->m_pPkg->Need(NULL, 0), 0);
                 m_mapNetContext[iHandle] = pNetContext;
                 fprintf(stdout, "test2:iHandle = %d\n", iHandle);
-//                pNetContext->m_pPkg->OnConnect(pNetContext, this);
-                pthread_mutex_unlock(&m_mutex);
-
-/*                //回一个包给源线程
-                CCommand::CCmdAddr &cAddr = cCmd.GetAddr();	
-                CCommand::CCmdAddr cSendAddr;
-                cSendAddr.m_iSrcTid = GetThreadId();
-                cSendAddr.m_iSrcType = GetThreadType();
-                cSendAddr.m_iDstTid = cAddr.m_iSrcTid;
-                cSendAddr.m_iDstType = cAddr.m_iSrcType;
-                CCommand cmd(NET_CONNECT_TYPE);
-                cmd.SetAddr(cSendAddr);
-                cmd.SetLData((int32_t*)iHandle);
-                //cmd.SetCmdType(NET_CONNECT_TYPE);
-                CThreadMgrSingleton::GetInstance()->SendCmd(cAddr.m_iSrcType, cmd, cAddr.m_iSrcTid);
-                */
             }
             break;
             case NET_DEL_TYPE:
             {
-                pthread_mutex_lock(&m_mutex);
                 int iHandle = (int64_t)cCmd.GetLData();
 
                 if (m_mapNetContext[iHandle]->m_pBufevt != NULL)	
@@ -187,11 +165,9 @@ namespace NSQTOOL
                 
                 delete m_mapNetContext[iHandle];
                 m_mapNetContext.erase(iHandle);
-                pthread_mutex_unlock(&m_mutex);
             }
             case NET_ADD_TYPE:
             {
-                pthread_mutex_lock(&m_mutex);
                 CNetThread::SNetContext *pNetContext = (CNetThread::SNetContext *)cCmd.GetLData();
                 //listen上来的包，默认由pkg的process函数
                 struct bufferevent * bufevt = bufferevent_socket_new(m_pEventBase, pNetContext->m_iHandle, 0);
@@ -202,12 +178,10 @@ namespace NSQTOOL
                                           pNetContext->m_pPkg->Need(NULL, 0), 0);
                 m_mapNetContext[pNetContext->m_iHandle] = pNetContext;
                 pNetContext->m_pPkg->OnAccept(pNetContext, this);
-                pthread_mutex_unlock(&m_mutex);
             }
             break;
             case NET_SEND_TYPE:
             {
-                pthread_mutex_lock(&m_mutex);
                 int iHandle = (int64_t)cCmd.GetLData();
                 std::string *pString = (std::string*)cCmd.GetRData();
 
@@ -216,11 +190,12 @@ namespace NSQTOOL
                     //发送失败应该回包给源线程，暂时忽略
                 }
 
-                pthread_mutex_unlock(&m_mutex);
                 delete pString;
             };
             break;
         }
+        
+        pthread_mutex_unlock(&m_mutex);
     }	
 
     void CNetThread::RealRun()
@@ -229,12 +204,6 @@ namespace NSQTOOL
         while (!m_bStop)	
         {
             CThread::ProcessCmd();
-
-            if (m_bStop)
-            {
-               pthread_cond_signal(&m_condWait); 
-               break;
-            }
 
             //1ms返回一次，所有有关net的thread通讯，时延在ms级别,建议通过send命令直接发送
             struct timeval sTm; 
@@ -261,14 +230,8 @@ namespace NSQTOOL
         {
             ProcessCmd();
 
-            if (m_bStop)
-            {
-               pthread_cond_signal(&m_condWait); 
-               break;
-            }
-
             struct timeval sTm; 
-            sTm.tv_sec =10;
+            sTm.tv_sec =0;
             sTm.tv_usec = 1000;
             event_base_loopexit(m_pEventBase, &sTm);	
             event_base_dispatch(m_pEventBase);
@@ -302,13 +265,13 @@ namespace NSQTOOL
     
     void CListenThread::RealProcessCmd(CCommand &cCmd)
     {
-         fprintf(stdout, "CListenThread::RealProcessCmd begin\n");
+        fprintf(stdout, "CListenThread::RealProcessCmd begin\n");
+        pthread_mutex_lock(&m_mutex);
 
         switch(cCmd.GetCmdType())
         {
             case NET_LISTEN_TYPE:
             {
-                pthread_mutex_lock(&m_mutex);
                 SListenInfo *pListenInfo = (SListenInfo *)cCmd.GetLData();		
                 fprintf(stdout, "NET_LISTEN_TYPE:%s_%d\n", pListenInfo->m_strHost.c_str(), pListenInfo->m_iPort);		
 
@@ -323,12 +286,10 @@ namespace NSQTOOL
                         (sockaddr*)&sAddr, sizeof(sockaddr_in));
                 int iHandle = evconnlistener_get_fd(pListener);	
                 m_mapListen[iHandle] = pListenInfo;
-                pthread_mutex_unlock(&m_mutex);
             }
             break;
             case NET_DEL_TYPE:
             {
-                pthread_mutex_lock(&m_mutex);
                 std::string *pString = (std::string *)cCmd.GetLData();
                 char chHost[64] = {0};
                 uint16_t iPort = 0;
@@ -348,11 +309,11 @@ namespace NSQTOOL
                 }
 
                 delete pString;
-                pthread_mutex_unlock(&m_mutex);
             }
             break;
         }
+            
+        pthread_mutex_unlock(&m_mutex);
     }
-
 };
 

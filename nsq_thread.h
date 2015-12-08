@@ -32,12 +32,13 @@ namespace NSQTOOL
 	protected:
 		std::list<CCommand> m_lstCmd;				
 		pthread_mutex_t m_mutex;	
-		pthread_mutex_t m_mutex2;	
+		pthread_mutex_t m_mutexSync; //同步	
 		pthread_cond_t m_cond;
-        pthread_cond_t m_condWait;
+        pthread_cond_t m_condWait; //退出等待
 		bool m_bStop;
 		int32_t m_iThreadType;
 		int32_t m_iThreadId;
+        pthread_t m_iTid; //系统线程id
 	};
 
 	class CThreadPoolInterface

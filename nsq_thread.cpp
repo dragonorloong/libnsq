@@ -4,18 +4,16 @@ namespace NSQTOOL
     CThread::CThread()
     {
         pthread_mutex_init(&m_mutex, NULL);
-        pthread_mutex_init(&m_mutex2, NULL);
+        pthread_mutex_init(&m_mutexSync, NULL);
         pthread_cond_init(&m_cond, NULL);
-        pthread_cond_init(&m_condWait, NULL);
         m_bStop = false;
     }
     
     CThread::~CThread()
     {
         pthread_mutex_destroy(&m_mutex);
-        pthread_mutex_destroy(&m_mutex2);
+        pthread_mutex_destroy(&m_mutexSync);
         pthread_cond_destroy(&m_cond);
-        pthread_cond_destroy(&m_condWait);
     }
     
     int32_t CThread::Init(int32_t iThreadType, int32_t iThreadId, void *pArg)
@@ -38,9 +36,9 @@ namespace NSQTOOL
     //同步消息
     void CThread::SendCmd(CCommand &cCmd)
     {
-        pthread_mutex_lock(&m_mutex2);
+        pthread_mutex_lock(&m_mutexSync);
         RealProcessCmd(cCmd);
-        pthread_mutex_unlock(&m_mutex2);
+        pthread_mutex_unlock(&m_mutexSync);
     }
     
     //异步消息
@@ -92,10 +90,10 @@ namespace NSQTOOL
             m_lstCmd.erase(m_lstCmd.begin());
             pthread_mutex_unlock(&m_mutex);
             
-            pthread_mutex_lock(&m_mutex2);
+            pthread_mutex_lock(&m_mutexSync);
             fprintf(stdout, "realProcesCmd type = %d\n", m_iThreadType);
             RealProcessCmd(cCmd);
-            pthread_mutex_unlock(&m_mutex2);
+            pthread_mutex_unlock(&m_mutexSync);
             
             iRet ++;
         }
@@ -118,20 +116,17 @@ namespace NSQTOOL
                 fprintf(stdout, "size = 1, alive, type = %d\n", m_iThreadType);
             }
         }	
-
-        pthread_cond_signal(&m_condWait);
     }
 
     void CThread::Run()
     {
-        static pthread_t tid;
-        pthread_create(&tid, NULL, ThreadFunc, this);	
+        pthread_create(&m_iTid, NULL, ThreadFunc, this);	
     }
     
     void CThread::Stop()
     {
         m_bStop = true;
-        pthread_cond_wait(&m_condWait, &m_mutex);
+        pthread_join(m_iTid, NULL);
     }
 
     void *CThread::ThreadFunc(void *pArgs)
@@ -140,10 +135,6 @@ namespace NSQTOOL
         pThread->RealRun();
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////
-    //                          CThreadMgr
-    ///////////////////////////////////////////////////////////////////////////////////
-    
     void CThreadMgr::RegisterThreadPool(CThreadPoolInterface *pThreadPool)
     {
         fprintf(stdout, "threadtype = %d\n", pThreadPool->GetThreadType());

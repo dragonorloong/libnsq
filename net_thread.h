@@ -26,10 +26,10 @@ namespace NSQTOOL
 			bufferevent *m_pBufevt;
 			int32_t m_iPkgType;
 			CData *m_pPkg;
+            int32_t m_iPkdgIndex; //相同类型的包根据索引来区分处理
             CCommand::CCmdAddr m_cAddr;
             std::string m_strHost;
             uint16_t m_iPort;
-
 			void Init(int32_t iHandle, bufferevent *pBufevt);
 		};
 

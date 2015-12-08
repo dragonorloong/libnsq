@@ -24,13 +24,6 @@ void CTimerThread::RealRun()
     {
         CThread::ProcessCmd();
 
-        if (m_bStop)
-        {
-           pthread_cond_signal(&m_condWait); 
-           break;
-        }
-
-        //1ms返回一次，所有有关net的thread通讯，时延在ms级别,建议通过send命令直接发送
         struct timeval sTm; 
         sTm.tv_sec =0;
         sTm.tv_usec = 1000;

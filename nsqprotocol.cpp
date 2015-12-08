@@ -82,8 +82,8 @@ void CNsqdResponse::OnError(CNetThread::SNetContext *pContext, CNetThread *pThre
 
 int32_t CNsqLookupResponse::Process(CNetThread::SNetContext *pContext, CNetThread *pThread)
 {
-        fprintf(stdout, "CNsqLookupResponse:Process\n");
-		 DecodeResponseBody();
+    fprintf(stdout, "CNsqLookupResponse:Process\n");
+	DecodeResponseBody();
 }
 
 void CNsqLookupResponse::OnConnect(CNetThread::SNetContext *pContext, CNetThread *pThread)
