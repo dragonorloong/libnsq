@@ -16,37 +16,38 @@
 
 namespace NSQTOOL
 {
-    class CData;
 	class CNetThread:public CThread
 	{
 	public:
 		struct SNetContext
 		{
-			int32_t m_iHandle;
-			bufferevent *m_pBufevt;
-			int32_t m_iPkgType;
-			CData *m_pPkg;
-            int32_t m_iPkdgIndex; //相同类型的包根据索引来区分处理
-            CCommand::CCmdAddr m_cAddr;
-            std::string m_strHost;
+            int m_iProtocolType;
+            int m_iProtocolId;
+            int m_iFd;
+            string m_strHost;
             uint16_t m_iPort;
-			void Init(int32_t iHandle, bufferevent *pBufevt);
+			bufferevent *m_pBufevt;
+            CNetHandler *m_pHandler;
 		};
 
-		CNetThread():m_pEventBase(NULL){pthread_mutex_init(&m_mutex, NULL);}
-		~CNetThread() {pthread_mutex_destroy(&m_mutex);}
-		int32_t Init(int32_t iThreadType, int32_t iThreadId, void *pArg);
+		CNetThread(int32_t iThreadType, int32_t iThreadId);
+
+        ~CNetThread() {pthread_mutex_destroy(&m_mutex);}
+
 		static void OnStaticRead(struct bufferevent *pBufevt, void *arg);
-		static void OnStaticError(struct bufferevent *pBufevt, short iTemp, void *arg);
-		void RealProcessCmd(CCommand &cCmd);
+		static void OnStaticError(struct bufferevent *pBufevt, 
+                                short iTemp, void *arg);
 		void RealRun();
-		int  SendData(int iHandle, const std::string *pString);
+        void DestoryFd(uint64_t iHandleId);
+    protected:
+		void RealProcessCmd(CCommand &cCmd);
+		int  SendData(int iFd, const std::string *pString);
     private:
 		void OnRead(struct bufferevent *pBufevt, void *arg);
 		void OnError(struct bufferevent *pBufevt, short iTemp, void *arg);
 	private:
 		event_base *m_pEventBase;
-		std::map<int, SNetContext *> m_mapNetContext;
+		std::map<uint64_t, SNetContext *> m_mapNetContext;
         pthread_mutex_t m_mutex;
 	};
 
@@ -57,14 +58,17 @@ namespace NSQTOOL
 		{
             std::string m_strHost;
             uint16_t m_iPort;
-			int m_iPkgType;	
+			int m_iProtocolType;	
+            int m_iProtocolId
 			evconnlistener *m_pListener;
-            CCommand::CCmdAddr m_cAddr;
+            CHandler *m_pHandler;
 		};
+
 
 		int32_t Init(int32_t iThreadType, int32_t iThreadId, void *pArg);
 		void RealRun();
-		static void OnStaticRead(struct evconnlistener *pListener, evutil_socket_t iAcceptHandle, 
+		static void OnStaticRead(struct evconnlistener *pListener, 
+                            evutil_socket_t iAcceptHandle, 
                             struct sockaddr *pAddr, int socklen, void *pArg);		
 		void RealProcessCmd(CCommand &cCmd);
     private:

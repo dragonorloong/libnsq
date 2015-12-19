@@ -8,6 +8,7 @@
 #include "main_thread.h"
 #include "timer_thread.h"
 #include "net_thread.h"
+
 namespace NSQTOOL
 {
     void CMainThread::RealProcessCmd(CCommand &cCmd)

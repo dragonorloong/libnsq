@@ -1,12 +1,18 @@
 #include "net_thread.h"
 namespace NSQTOOL
 {
-    CThread::CThread()
+    CThread::CThread(int32_t iThreadType, int32_t iThreadId, void *pArg = NULL)
     {
         pthread_mutex_init(&m_mutex, NULL);
         pthread_mutex_init(&m_mutexSync, NULL);
         pthread_cond_init(&m_cond, NULL);
         m_bStop = false;
+
+        fprintf(stdout, "Init ThreadType = %d, iThreadId = %d\n", iThreadType, iThreadId);
+
+        m_iThreadType = iThreadType;
+        m_iThreadId = iThreadId;
+        m_iHandleIdInc = 0;
     }
     
     CThread::~CThread()
@@ -16,13 +22,6 @@ namespace NSQTOOL
         pthread_cond_destroy(&m_cond);
     }
     
-    int32_t CThread::Init(int32_t iThreadType, int32_t iThreadId, void *pArg)
-    {
-        fprintf(stdout, "Init ThreadType = %d, iThreadId = %d\n", iThreadType, iThreadId);
-        m_iThreadType = iThreadType;
-        m_iThreadId = iThreadId;
-    }
-
     int32_t CThread::GetThreadId()
     {
         return m_iThreadId;
@@ -63,6 +62,17 @@ namespace NSQTOOL
         {
             m_lstCmd.clear();	
             m_bStop = true;
+        }
+        else
+        {
+           if (m_mapHandler.find(cCmd.GetAddr().m_iDstHandleId) != m_mapHandler.end())
+           {
+                m_mapHandler[cCmd.GetAddr().m_iDstHandleId]->ProcessCmd(cCmd);         
+           }
+           else
+           {
+                fprintf(stdout, "error cmd\n"); 
+           }
         }
     }
     
@@ -107,6 +117,7 @@ namespace NSQTOOL
         {
             int32_t iRet = ProcessCmd();
             fprintf(stdout, "iType = %d, iRet = %d\n", m_iThreadType, iRet);            
+
             if (iRet ==0 && !m_bStop)
             {
                 fprintf(stdout, "size = 0, type = %d, wait\n", m_iThreadType);
@@ -127,6 +138,20 @@ namespace NSQTOOL
     {
         m_bStop = true;
         pthread_join(m_iTid, NULL);
+    }
+
+    virtual CThread::DestoryHandler(uint64_t iHandleId)
+    {
+        if (m_mapHandler.find(iHandleId) != m_mapHandler.end())
+        {
+            delete m_mapHandler[iHandleId];
+            m_mapHandler.erase(iHandleId);
+        }
+    }
+
+    uint64_t CThread::GetHandleId()
+    {
+        return ++m_iHandleIdInc; 
     }
 
     void *CThread::ThreadFunc(void *pArgs)
@@ -181,6 +206,71 @@ namespace NSQTOOL
         {
             iter->second->Run();
         }
+    }
+
+    CThreadPool::CThreadPool(int iThreadType, int iThreadNum)
+    {
+        m_pThread = NULL;
+        m_iCurrentNum = 0;
+        m_iTotalThreadNum = iThreadNum;
+        m_iThreadType = iThreadType;
+        
+        for (int i = 0; i < iThreadNum; ++i)
+        {
+            CThread *pThread = CSingletonNsqFactory::GetInstance()->GenThread(iThreadType, i); 
+            m_vecThread.push_back(pThread);  
+        }
+    }
+
+    CThreadPool::~CThreadPool()
+    {
+        for (int i = 0; i< m_vecThread.size(); ++i)
+        {
+            delete m_vecThread[i]; 
+        }
+
+        m_vecThread.clean();
+    }
+
+    void CThreadPool::Run()
+    {
+        for (int i = 0; i < m_iTotalThreadNum; ++i)
+        {
+            m_vecThread[i]->Run();
+        }
+    }
+
+    void CThreadPool::SendCmd(CCommand &cCmd, int32_t iThreadNum = 0)
+    {
+        if (iThreadNum == 0)
+        {
+            iThreadNum = (m_iCurrentNum++) % m_iTotalThreadNum;	
+        }
+
+        m_vecThread[iThreadNum]->SendCmd(cCmd);
+    }
+
+    void CThreadPool::PostCmd(CCommand &cCmd, int32_t iThreadNum = 0)
+    {
+        if (iThreadNum == 0)
+        {
+            iThreadNum = (m_iCurrentNum++) % m_iTotalThreadNum;	
+        }
+
+        m_vecThread[iThreadNum]->PostCmd(cCmd);
+    }
+
+    void CThreadPool::Stop()
+    {
+        for (int i = 0; i < m_iTotalThreadNum; ++i)
+        {
+            m_vecThread[i]->Stop();
+        }
+    }
+
+    int32_t CThreadPool::GetThreadType()
+    {
+        return m_iThreadType;
     }
     
 };

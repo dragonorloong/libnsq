@@ -24,15 +24,33 @@ namespace NSQTOOL
         MAIN_THREAD_TYPE = -4,
     };
 
+    enum ENsqProtocolType
+    {
+        NSQLOOKUP_TYPE = -1,
+        NSQD_TYPE = -2,
+    };
+
 	class CCommand
 	{
 	public:
 		struct CCmdAddr
 		{
-			pthread_t m_iSrcTid;
+			int32_t m_iSrcTid;
 			int32_t m_iSrcType;			
-			pthread_t m_iDstTid;
-			pthread_t m_iDstType;
+			int32_t m_iDstTid;
+			int32_t m_iDstType;
+            uint64_t m_iSrcHandleId;
+            uint64_t m_iDstHandleId;
+
+            CCmdAddr()
+            {
+			    m_iSrcTid = -1;
+			    m_iSrcType = -1;			
+                m_iDstTid = -1;
+                m_iDstType = -1;
+                m_iSrcHandleId = -1;
+                m_iDstHandleId = -1;
+            }
 		};
 
 		CCommand(int32_t iType):m_iCmdType(iType),m_pLData(NULL), m_pRData(NULL)

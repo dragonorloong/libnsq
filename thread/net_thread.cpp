@@ -4,18 +4,11 @@
 
 namespace NSQTOOL
 {
-    void CNetThread::SNetContext::Init(int32_t iHandle, bufferevent *pBufevt)
+    int32_t CNetThread::CNetThread(int32_t iThreadType, int32_t iThreadId)
+        :CThread(iThreadType, iThreadId)
     {
-        m_iHandle = iHandle;
-        m_pBufevt = pBufevt;
-
-        m_pPkg = CData::New(m_iPkgType);
-    }
-
-    int32_t CNetThread::Init(int32_t iThreadType, int32_t iThreadId, void *pArg)
-    {
-        CThread::Init(iThreadType, iThreadId, pArg);
         m_pEventBase = event_base_new();			
+        pthread_mutex_init(&m_mutex, NULL);
     }
 
     void CNetThread::OnStaticRead(struct bufferevent *pBufevt, void *arg)
@@ -35,13 +28,11 @@ namespace NSQTOOL
         char *pData = new char[iLength + 1];
         bufferevent_read(pBufevt, pData, iLength);			
         pData[iLength] = '\0';
-        int iNeedLength = pContext->m_pPkg->Need(pData, iLength);
+        int iNeedLength = pContext->m_pHandler->OnRead(pData, iLength); 
 
         while (iNeedLength == 0)
         {
-            pContext->m_pPkg->Process(pContext, pThis);	
-            pContext->m_pPkg->NextPkg();
-            iNeedLength = pContext->m_pPkg->Need(NULL, 0);
+            iNeedLength = pContext->m_pHandler->OnRead(NULL, 0);
         }
                 
         bufferevent_setwatermark(pBufevt, EV_READ, iNeedLength, 0);
@@ -57,51 +48,34 @@ namespace NSQTOOL
 
     void CNetThread::OnError(struct bufferevent *pBufevt, short iTemp, void *arg)
     {
-        pthread_mutex_lock(&m_mutex);
-
         if (iTemp & BEV_EVENT_CONNECTED)
         {
+            pthread_mutex_lock(&m_mutex);
             fprintf(stdout, "the client has connected to server\n");
             int32_t iHandle = bufferevent_getfd(pBufevt);            
             CNetThread *pThis = (CNetThread*)arg;	
             SNetContext *pContext = pThis->m_mapNetContext[bufferevent_getfd(pBufevt)];
-            pContext->m_pPkg->OnConnect(pContext, this);
+            pContext->m_pHandler->OnConnect();
             pthread_mutex_unlock(&m_mutex);
             return; 
         }
-
-        int32_t iHandle = bufferevent_getfd(pBufevt);            
-        CNetThread *pThis = (CNetThread*)arg;	
-        SNetContext *pContext = pThis->m_mapNetContext[bufferevent_getfd(pBufevt)];
-        pContext->m_pPkg->OnError(pContext, this, iTemp);
-
-
-        if (pThis->m_mapNetContext[iHandle]->m_pBufevt != NULL)	
-        {
-            bufferevent_free(pThis->m_mapNetContext[iHandle]->m_pBufevt);
-            pThis->m_mapNetContext[iHandle]->m_pBufevt = NULL;
-        }
-        
-        delete pThis->m_mapNetContext[iHandle];
-        pThis->m_mapNetContext.erase(iHandle);
-        pthread_mutex_unlock(&m_mutex);
     }
 
-    int CNetThread::SendData(int iHandle, const std::string *pString)
+    int CNetThread::SendData(int iFd, const std::string *pString)
     {
         fprintf(stdout, "test3:iHandle = %d\n", iHandle);
 
-        if (m_mapNetContext[iHandle] == NULL)
+        if (m_mapNetContext[iFd] == NULL)
         {
             fprintf(stdout, "SendData is null\n");
             return -1;	
         }
         
-        int iRet = bufferevent_write(m_mapNetContext[iHandle]->m_pBufevt, pString->c_str(), pString->size());	
+        int iRet = bufferevent_write(m_mapNetContext[iFd]->m_pBufevt, pString->c_str(), pString->size());	
         
         if (iRet != 0)
         {
-            fprintf(stderr, "send data field, iHandle = %d", iHandle);
+            fprintf(stderr, "send data field, iHandle = %d", iFd);
         }
 
         return iRet;
@@ -120,6 +94,9 @@ namespace NSQTOOL
                 //只做tcp的connect
                 CNetThread::SNetContext *pNetContext = (CNetThread::SNetContext *)cCmd.GetLData();
             
+                CSingletonNsqFactory::GetInstance()->GenTcpHandler(pNetContext->m_iProtocolType, pNetContext->m_iProtocolId, 
+                GetHandleId(),
+                pNetContext->m_strHost, pNetContext->m_iPort);
                 sockaddr_in sAddr;
                 memset(&sAddr, 0, sizeof(sockaddr_in));
                 sAddr.sin_addr.s_addr = inet_addr(pNetContext->m_strHost.c_str());
@@ -137,55 +114,52 @@ namespace NSQTOOL
                     bufevt = NULL;
                     //不肯定bufferevent_free是否会释放socket，后续测试
                     fprintf(stderr, "socket connect return error: %s,%d\n", pNetContext->m_strHost.c_str(), pNetContext->m_iPort);
-                    pNetContext->m_pPkg->OnError(pNetContext, this, errno);
+                    pNetContext->m_pHandler = CSingletonNsqFactory::GetInstance()->GenTcpHandler(this,GetHandleId(), pNetContext->m_iProtocolType, pNetContext->m_iProtocolId, -1, pNetContext->m_strHost, pNetContext->m_iPort);
+                    pNetContext->m_pHandler->OnError(errno);
+                    delete pNetContext->m_pHandler;
+                    delete pNetContext;
                     break;
                 }
 
-                int iHandle = bufferevent_getfd(bufevt);
+                int iFd = bufferevent_getfd(bufevt);
                 bufferevent_setcb(bufevt, OnStaticRead, NULL, OnStaticError, this);
-                bufferevent_enable(bufevt, EV_READ|EV_PERSIST);		
-                pNetContext->Init(iHandle, bufevt);
+                bufferevent_enable(bufevt, EV_READ|EV_PERSIST|EV_ET);		
+                pNetContext->m_pHandler = CSingletonNsqFactory::GetInstance()->GenTcpHandler(this,GetHandleId(), pNetContext->m_iProtocolType, pNetContext->m_iProtocolId, iFd, pNetContext->m_strHost, pNetContext->m_iPort);
+                pNetContext->m_pBufevt = bufevt;
 
                 //设置读入最低水位，防止无效回调
                 bufferevent_setwatermark(bufevt, EV_READ, 
-                                          pNetContext->m_pPkg->Need(NULL, 0), 0);
-                m_mapNetContext[iHandle] = pNetContext;
-                fprintf(stdout, "test2:iHandle = %d\n", iHandle);
+                                          pNetContext->m_pHandler->Need(NULL, 0), 0);
+                m_mapNetContext[iFd] = pNetContext;
+                pNetContext->m_iFd = iFd;
+                fprintf(stdout, "test2:iHandle = %d\n", iFd);
             }
             break;
             case NET_DEL_TYPE:
             {
-                int iHandle = (int64_t)cCmd.GetLData();
-
-                if (m_mapNetContext[iHandle]->m_pBufevt != NULL)	
-                {
-                    bufferevent_free(m_mapNetContext[iHandle]->m_pBufevt);
-                    m_mapNetContext[iHandle]->m_pBufevt = NULL;
-                }
-                
-                delete m_mapNetContext[iHandle];
-                m_mapNetContext.erase(iHandle);
+                int iFd = (int64_t)cCmd.GetLData();
+                DestoryFd(iFd);
             }
             case NET_ADD_TYPE:
             {
                 CNetThread::SNetContext *pNetContext = (CNetThread::SNetContext *)cCmd.GetLData();
                 //listen上来的包，默认由pkg的process函数
                 struct bufferevent * bufevt = bufferevent_socket_new(m_pEventBase, pNetContext->m_iHandle, 0);
-                pNetContext->Init(pNetContext->m_iHandle, bufevt);
                 bufferevent_setcb(bufevt, OnStaticRead, NULL, OnStaticError, this);
-                bufferevent_enable(bufevt, EV_READ|EV_WRITE|EV_PERSIST);		
+                bufferevent_enable(bufevt, EV_READ|EV_WRITE|EV_PERSIST|EV_ET);		
                 bufferevent_setwatermark(bufevt, EV_READ, 
                                           pNetContext->m_pPkg->Need(NULL, 0), 0);
-                m_mapNetContext[pNetContext->m_iHandle] = pNetContext;
-                pNetContext->m_pPkg->OnAccept(pNetContext, this);
+                m_mapNetContext[pNetContext->m_iFd] = pNetContext;
+                pNetContext->m_pHandler = CSingletonNsqFactory::GetInstance()->GenTcpHandler(this,GetHandleId(), pNetContext->m_iProtocolType, pNetContext->m_iProtocolId, pNetContext->iFd, pNetContext->m_strHost, pNetContext->m_iPort);
+                pNetContext->m_pHandler->OnConnect();
             }
             break;
             case NET_SEND_TYPE:
             {
-                int iHandle = (int64_t)cCmd.GetLData();
+                int iFd = (int64_t)cCmd.GetLData();
                 std::string *pString = (std::string*)cCmd.GetRData();
 
-                if (SendData(iHandle, pString) != 0)
+                if (SendData(iFd, pString) != 0)
                 {
                     //发送失败应该回包给源线程，暂时忽略
                 }
@@ -214,12 +188,27 @@ namespace NSQTOOL
         }
     }
 
+
+    void CNetThread::DestoryFd(int iFd)
+    {
+        uint64_t iRealHandleId = 0;
+
+        if (m_mapNetContext.find(iFd) != m_mapNetContext.end())
+        {
+            iRealHandleId = m_mapNetContext[iFd]->m_pHandler->GetHandlerId();
+            bufferevent_free(m_mapNetContext[iFd]->m_pBufevt);
+            m_mapNetContext.erase(iFd);
+        }
+
+        CThread::DestoryHandler(iRealHandleId);
+    }
+
     //////////////////////////////////////////////////////////
     //                CListenThread
     /////////////////////////////////////////////////////////
-    int32_t CListenThread::Init(int32_t iThreadType, int32_t iThreadId, void *pArg)
+    int32_t CListenThread::CListenThread(int32_t iThreadType, int32_t iThreadId):
+        CThread(iThreadType, iThreadId)
     {
-        CThread::Init(iThreadType, iThreadId, pArg);
         m_pEventBase = event_base_new();			
     }
 
@@ -284,8 +273,9 @@ namespace NSQTOOL
                  evconnlistener * pListener = evconnlistener_new_bind(m_pEventBase, OnStaticRead, this, 
                         LEV_OPT_THREADSAFE|LEV_OPT_REUSEABLE|LEV_OPT_CLOSE_ON_FREE, 10,
                         (sockaddr*)&sAddr, sizeof(sockaddr_in));
-                int iHandle = evconnlistener_get_fd(pListener);	
-                m_mapListen[iHandle] = pListenInfo;
+                int iFd = evconnlistener_get_fd(pListener);	
+                m_mapListen[iFd] = pListenInfo;
+
             }
             break;
             case NET_DEL_TYPE:
