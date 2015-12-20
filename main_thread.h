@@ -17,6 +17,11 @@ namespace NSQTOOL
         {
             LOOKUP_TIMER = 1,
         };
+        CMainThread(int iThreadType, int iThreadId)
+           : CThread(iThreadType, iThreadId)
+        {
+        
+        }
 
         void RealProcessCmd(CCommand &cCmd); 
         void RealRun(); 

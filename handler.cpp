@@ -3,13 +3,13 @@
 
 namespace NSQTOOL
 {
-    CHnadler::CHandler(uint64_t iHandlerId, CThread *pThread):
+    CHandler::CHandler(uint64_t iHandlerId, CThread *pThread):
         m_iHandlerId(iHandlerId), m_pThread(pThread)
     {
          
     }
 
-    virtual CHandler::~CHandler()
+    CHandler::~CHandler()
     {
     }
 
@@ -23,9 +23,9 @@ namespace NSQTOOL
         return m_pThread; 
     }
 
-    void CHandler::SetHandlerId(uint64_t iHandleId)
+    void CHandler::SetHandlerId(uint64_t iHandlerId)
     {
-        m_iHandleId = iHandleId; 
+        m_iHandlerId = iHandlerId; 
     }
 
     void CHandler::SetThread(CThread *pThread)

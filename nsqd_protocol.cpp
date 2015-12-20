@@ -11,14 +11,11 @@ int32_t CNsqdResponse::Need(const char *pData, int32_t iLength)
         return 4;
     }
 
-    fprintf(stdout, "stream = %d, length = %d\n", m_strStream.length(), iLength);
-
     if (iLength != 0)
     {
 	    m_strStream.append(pData, iLength);
     }
 
-    fprintf(stdout, "stream = %d, length = %d\n", m_strStream.length(), iLength);
 
 	size_t needLen=0;
 	if(m_strStream.length()<4){
@@ -27,7 +24,6 @@ int32_t CNsqdResponse::Need(const char *pData, int32_t iLength)
 		needLen = ntohl(*(int32_t*)m_strStream.c_str()) + 4;
 	}
 
-    fprintf(stdout, "needLen = %d, strStream = %d\n", needLen, m_strStream.length());
 	if(needLen<=m_strStream.length()){
         m_iCurPkgLength = needLen;
 		return 0;
@@ -36,7 +32,7 @@ int32_t CNsqdResponse::Need(const char *pData, int32_t iLength)
 	return needLen - m_strStream.length();
 }
 
-int32_t CNsqdResponse::Process(CNetThread::SNetContext *pContext, CNetThread *pThread)
+/*int32_t CNsqdResponse::Process(CNetThread::SNetContext *pContext, CNetThread *pThread)
 {
     fprintf(stdout, "CNsqdResponse::Process\n");
 	if (GetFrameType() == CNsqdResponse::FrameTypeResponse)
@@ -78,6 +74,7 @@ void CNsqdResponse::OnError(CNetThread::SNetContext *pContext, CNetThread *pThre
 {
     fprintf(stdout, "OnError, iEvent = %d\n", iEvent);
 }
+*/
 
 };
 

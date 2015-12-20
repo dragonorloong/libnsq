@@ -17,7 +17,7 @@ namespace NSQTOOL
        {
            case LOOKUP_TIMER:
                {
-                    fprintf(stdout, "LOOKUP_TIMER\n");
+/*                    fprintf(stdout, "LOOKUP_TIMER\n");
                     CCommand cmd(NET_CONNECT_TYPE);
                     CNetThread::SNetContext *pNetContext = new CNetThread::SNetContext;
                     pNetContext->m_strHost = "127.0.0.1";
@@ -31,6 +31,7 @@ namespace NSQTOOL
                     cCmdAddr.m_iDstType = NET_THREAD_TYPE;
                     cmd.SetAddr(cCmdAddr);
                     CThreadMgrSingleton::GetInstance()->PostCmd(NET_THREAD_TYPE, cmd, 0);
+                    */
                }
                break;
             default:
@@ -41,7 +42,7 @@ namespace NSQTOOL
 
     void CMainThread::RealRun()
     {
-        CThreadPool<CNetThread> *pNetThreadPool = new CThreadPool<CNetThread>();
+/*        CThreadPool<CNetThread> *pNetThreadPool = new CThreadPool<CNetThread>();
         pNetThreadPool->Init(NET_THREAD_TYPE, 1, NULL);
         CThreadMgrSingleton::GetInstance()->RegisterThreadPool(pNetThreadPool);
 
@@ -69,5 +70,6 @@ namespace NSQTOOL
         CThreadMgrSingleton::GetInstance()->PostCmd(TIMER_THREAD_TYPE, cmd, 0);
         CThreadMgrSingleton::GetInstance()->Run();
         CThread::RealRun();
+        */
     }
 };

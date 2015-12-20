@@ -5,10 +5,11 @@
 using namespace std;
 #include "factory.h"
 #include "event2/bufferevent.h"
+#include "command.h"
+#include "handler.h"
 
 namespace NSQTOOL
 {
-    class CHandler;
     class CListenHandler;
 
     class CTcpHandler:public CHandler
@@ -28,7 +29,7 @@ namespace NSQTOOL
             m_pListenHandler = pListenHandler; 
         }
 
-        CListenHandler * GetListenHandler()
+        CListenHandler *GetListenHandler()
         {
             return m_pListenHandler; 
         }
@@ -58,7 +59,7 @@ namespace NSQTOOL
             m_iPort = iPort; 
         }
 
-        void GetPort()
+        uint16_t GetPort()
         {
             return m_iPort; 
         }

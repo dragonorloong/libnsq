@@ -1,14 +1,16 @@
 #include "net_thread.h"
+#include "factory.h"
+
 namespace NSQTOOL
 {
-    CThread::CThread(int32_t iThreadType, int32_t iThreadId, void *pArg = NULL)
+    CThread::CThread(int32_t iThreadType, int32_t iThreadId)
     {
         pthread_mutexattr_t attr;
         pthread_mutexattr_init(&attr);
         pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
-        pthread_mutex_init(&m_mutex, &m_mutex);
-        pthread_mutex_init(&m_mutexSync, &m_mutex);
-        pthread_mutexattr_destory(&m_mutex);
+        pthread_mutex_init(&m_mutex, &attr);
+        pthread_mutex_init(&m_mutexSync, &attr);
+        pthread_mutexattr_destroy(&attr);
         pthread_cond_init(&m_cond, NULL);
         m_bStop = false;
 
@@ -82,11 +84,6 @@ namespace NSQTOOL
     
     int32_t CThread::ProcessCmd()
     {
-        if (m_iThreadType == -4)
-        {
-            fprintf(stdout, "ProcessCmd size = %d, type = %d\n", m_lstCmd.size(), m_iThreadType);
-        }
-
         int32_t iRet = 0;
         
         while (m_lstCmd.size() != 0)
@@ -144,14 +141,14 @@ namespace NSQTOOL
         pthread_join(m_iTid, NULL);
     }
 
-    virtual CThread::DestoryHandler(uint64_t iHandleId)
+    void CThread::DestoryHandler(uint64_t iHandlerId)
     {
         pthread_mutex_lock(&m_mutex);
 
-        if (m_mapHandler.find(iHandleId) != m_mapHandler.end())
+        if (m_mapHandler.find(iHandlerId) != m_mapHandler.end())
         {
-            delete m_mapHandler[iHandleId];
-            m_mapHandler.erase(iHandleId);
+            delete m_mapHandler[iHandlerId];
+            m_mapHandler.erase(iHandlerId);
         }
 
         pthread_mutex_unlock(&m_mutex);
@@ -168,13 +165,13 @@ namespace NSQTOOL
         pThread->RealRun();
     }
 
-    void CThreadMgr::RegisterThreadPool(CThreadPoolInterface *pThreadPool)
+    void CThreadMgr::RegisterThreadPool(CThreadPool *pThreadPool)
     {
         fprintf(stdout, "threadtype = %d\n", pThreadPool->GetThreadType());
         m_mapThreadPool[pThreadPool->GetThreadType()] = pThreadPool;
     }
 
-    void CThreadMgr::SendCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum) 
+    void CThreadMgr::SendCmd(int32_t iThreadType, CCommand &cCmd,int32_t iThreadNum) 
     {
         fprintf(stdout, "SendCmd threadtype = %d\n", iThreadType);
         if (m_mapThreadPool.find(iThreadType) != m_mapThreadPool.end())
@@ -196,7 +193,7 @@ namespace NSQTOOL
 
     void CThreadMgr::Stop()
     {
-        std::map<int32_t, CThreadPoolInterface*>::iterator iter = m_mapThreadPool.begin();
+        std::map<int32_t, CThreadPool*>::iterator iter = m_mapThreadPool.begin();
 
         for (; iter != m_mapThreadPool.end(); ++iter)
         {
@@ -208,7 +205,7 @@ namespace NSQTOOL
 
     void CThreadMgr::Run()
     {
-        std::map<int32_t, CThreadPoolInterface*>::iterator iter = m_mapThreadPool.begin();
+        std::map<int32_t, CThreadPool*>::iterator iter = m_mapThreadPool.begin();
 
         for (; iter != m_mapThreadPool.end(); ++iter)
         {
@@ -218,7 +215,6 @@ namespace NSQTOOL
 
     CThreadPool::CThreadPool(int iThreadType, int iThreadNum)
     {
-        m_pThread = NULL;
         m_iCurrentNum = 0;
         m_iTotalThreadNum = iThreadNum;
         m_iThreadType = iThreadType;
@@ -237,7 +233,7 @@ namespace NSQTOOL
             delete m_vecThread[i]; 
         }
 
-        m_vecThread.clean();
+        m_vecThread.clear();
     }
 
     void CThreadPool::Run()
@@ -248,9 +244,9 @@ namespace NSQTOOL
         }
     }
 
-    void CThreadPool::SendCmd(CCommand &cCmd, int32_t iThreadNum = 0)
+    void CThreadPool::SendCmd(CCommand &cCmd, int32_t iThreadNum)
     {
-        if (iThreadNum == 0)
+        if (iThreadNum == -1)
         {
             iThreadNum = (m_iCurrentNum++) % m_iTotalThreadNum;	
         }
@@ -258,9 +254,9 @@ namespace NSQTOOL
         m_vecThread[iThreadNum]->SendCmd(cCmd);
     }
 
-    void CThreadPool::PostCmd(CCommand &cCmd, int32_t iThreadNum = 0)
+    void CThreadPool::PostCmd(CCommand &cCmd, int32_t iThreadNum)
     {
-        if (iThreadNum == 0)
+        if (iThreadNum == -1)
         {
             iThreadNum = (m_iCurrentNum++) % m_iTotalThreadNum;	
         }

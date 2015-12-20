@@ -3,7 +3,7 @@
 namespace NSQTOOL
 {
 
-int32_t CNsqLookupResponse::Process(CNetThread::SNetContext *pContext, CNetThread *pThread)
+/*int32_t CNsqLookupResponse::Process(CNetThread::SNetContext *pContext, CNetThread *pThread)
 {
     fprintf(stdout, "CNsqLookupResponse:Process\n");
 	DecodeResponseBody();
@@ -22,8 +22,9 @@ void CNsqLookupResponse::OnError(CNetThread::SNetContext *pContext, CNetThread *
 {
     fprintf(stdout, "CNsqLookupResponse:OnError, iEvent = %d\n", iEvent);
 }
+*/
 
-int32_t CNsqLookupResponse::Decode()
+void CNsqLookupResponse::Decode()
 {
     string &strBodyTemp = CHttpResponse::GetBody();
     const char *chBody = strBodyTemp.c_str();
@@ -34,7 +35,7 @@ int32_t CNsqLookupResponse::Decode()
     if (!reader.parse(chBody, root))
     {
         fprintf(stdout, "parse root failed!\n");
-        return -1;
+        return ;
     }
 
     m_strStatus = root["status_code"].asString();
@@ -43,7 +44,7 @@ int32_t CNsqLookupResponse::Decode()
     if (m_strStatus != "200")
     {
         fprintf(stdout, "response return failed errorinfo is:%s\n" ,m_strStatusTxt.c_str());
-        return 0;
+        return ;
     }
 
     m_vecChannels.clear();
@@ -78,7 +79,7 @@ int32_t CNsqLookupResponse::Decode()
         m_vecProducers.push_back(item);
     }
 
-    return 0;
+    return ;
 }
 
 };

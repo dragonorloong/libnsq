@@ -1,5 +1,5 @@
-#ifndef _TCP_HANDLER_
-#define _TCP_HANDLER_
+#ifndef _NSQLOOKUP_HANDLER_
+#define _NSQLOOKUP_HANDLER_
 #include <iostream>
 #include <string>
 using namespace std;

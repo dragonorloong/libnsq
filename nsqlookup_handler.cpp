@@ -1,4 +1,7 @@
 #include "tcp_handler.h"
+#include "thread.h"
+#include "factory.h"
+#include "net_thread.h"
 #include "nsqlookup_handler.h"
 
 namespace NSQTOOL
@@ -7,7 +10,7 @@ namespace NSQTOOL
                 uint64_t iHandleId, CThread *pThread)
                 : CTcpHandler(iProtocolType, iProtocolId, iHandleId, pThread)
         {
-            m_pProtocol = CSingletonNsqFactory::GetInstance()->GentProtocol(
+            m_pProtocol = CSingletonNsqFactory::GetInstance()->GenProtocol(
                     iProtocolType); 
             m_pListenHandler = NULL;
         }

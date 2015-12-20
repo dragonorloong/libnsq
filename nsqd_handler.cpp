@@ -1,4 +1,5 @@
 #include "tcp_handler.h"
+#include "thread.h"
 #include "nsqd_handler.h"
 
 namespace NSQTOOL
@@ -17,7 +18,7 @@ namespace NSQTOOL
 
         void CNsqdHandler::OnError(int iErrorNo)
         {
-            GetThread()->DestoryHandler(GetHandleId());          
+            GetThread()->DestoryHandler(GetHandlerId());          
 
             if (m_pListenHandler != NULL)
             {

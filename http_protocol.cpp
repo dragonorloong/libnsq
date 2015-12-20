@@ -5,6 +5,8 @@
 	> Created Time: 2015年10月25日 星期日 15时53分52秒
  ************************************************************************/
 #include "http_protocol.h"
+#include <stdio.h>
+#include <string>
 
 namespace NSQTOOL
 {

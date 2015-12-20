@@ -27,17 +27,12 @@ namespace NSQTOOL
             CTimerThread *m_pThis;
         };
 
-        CTimerThread()
-        {
-            pthread_mutex_init(&m_mutex, NULL);
-        }
-
+        CTimerThread(int32_t iThreadType, int32_t iThreadId);
         ~CTimerThread()
         {
             pthread_mutex_destroy(&m_mutex);
         }
 
-		int32_t Init(int32_t iThreadType, int32_t iThreadId, void *pArg);
 		void RealRun();
 		void RealProcessCmd(CCommand &cCmd);
         static void OnStaticTimeOut(int iHandle, short iEvent, void *pArg);

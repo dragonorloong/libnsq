@@ -1,15 +1,19 @@
 #ifndef _FACTORY_
 #define _FACTORY_
-#include ""
+#include "singleton.h"
 
 namespace NSQTOOL
 {
+    class CThread;
+    class CProtocol;
+    class CHandler;
     class CFactory
     {
     public:
-        Thread *GenThread(int iThreadType, int iThreadId) = 0;
-        CProtocol *GenProtocol(int iProtocolType) = 0;
-        CHandler *GenHandler(int iProtocolType, int iProtocolId, int iHandlerId, CThread *pThread)=0;
+        virtual CThread *GenThread(int iThreadType, int iThreadId) = 0;
+        virtual CProtocol *GenProtocol(int iProtocolType) = 0;
+        virtual CHandler *GenHandler(int iProtocolType, int iProtocolId, 
+                int iHandlerId, CThread *pThread)=0;
     };
 
     class CNsqFactory:public CFactory
@@ -23,7 +27,7 @@ namespace NSQTOOL
         }
 
     public:
-        Thread *GenThread(int iThreadType, int iThreadId);
+        CThread *GenThread(int iThreadType, int iThreadId);
         CProtocol *GenProtocol(int iProtocolType);
         CHandler *GenHandler(int iProtocolType, int iProtocolId, int iHandlerId, CThread *pThread);
     };

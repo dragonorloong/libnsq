@@ -9,13 +9,15 @@
 
 namespace NSQTOOL
 {
-    
-int32_t CTimerThread::Init(int32_t iThreadType, int32_t iThreadId, void *pArg)
+
+CTimerThread::CTimerThread(int32_t iThreadType, int32_t iThreadId)
+    : CThread(iThreadType, iThreadId)
 {
-        CThread::Init(iThreadType, iThreadId, pArg);
-        m_pEventBase = event_base_new();			
+    pthread_mutex_init(&m_mutex, NULL);
+    m_pEventBase = event_base_new();			
 }
 
+    
 void CTimerThread::RealRun()
 { 
     fprintf(stdout, "CTimerThread RealRun\n");

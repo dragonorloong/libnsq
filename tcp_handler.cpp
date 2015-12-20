@@ -1,4 +1,6 @@
 #include "tcp_handler.h"
+#include "thread.h"
+#include "protocol.h"
 
 namespace NSQTOOL
 {
@@ -8,7 +10,7 @@ namespace NSQTOOL
                 , m_iProtocolType(iProtocolType)
                 , m_iProtocolId(iProtocolId)
         {
-            m_pProtocol = CSingletonNsqFactory::GetInstance()->GentProtocol(
+            m_pProtocol = CSingletonNsqFactory::GetInstance()->GenProtocol(
                     iProtocolType); 
             m_pListenHandler = NULL;
         }
@@ -20,7 +22,7 @@ namespace NSQTOOL
 
         void CTcpHandler::OnError(int iErrorNo)
         {
-            GetThread()->DestoryHandler(GetHandleId());          
+            GetThread()->DestoryHandler(GetHandlerId());          
 
             if (m_pListenHandler != NULL)
             {

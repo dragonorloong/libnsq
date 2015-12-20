@@ -6,14 +6,18 @@
 #include <stdint.h>
 #include <map>
 #include <list>
+#include <vector>
 #include <unistd.h>
+#include "handler.h"
+
+using namespace std;
 
 namespace NSQTOOL
 {
 	class CThread
 	{
 	public:
-		CThread(int32_t iThreadType, int32_t iThreadId, void *pArg = NULL);
+		CThread(int32_t iThreadType, int32_t iThreadId);
 		~CThread();
 
 		int32_t GetThreadId();
@@ -53,13 +57,13 @@ namespace NSQTOOL
 	class CThreadPool
 	{
 	public:		
-        CThreadPool(int iThreadType, int iThreadNum)
-        ~CThreadPool()
-		void Run()
-		void SendCmd(CCommand &cCmd, int32_t iThreadNum = 0)
-		void PostCmd(CCommand &cCmd, int32_t iThreadNum = 0)
-		void Stop()
-		int32_t GetThreadType()
+        CThreadPool(int iThreadType, int iThreadNum);
+        ~CThreadPool();
+		void Run();
+		void SendCmd(CCommand &cCmd, int32_t iThreadNum = -1);
+		void PostCmd(CCommand &cCmd, int32_t iThreadNum = -1);
+		void Stop();
+		int32_t GetThreadType();
 
 	private:
 		vector<CThread *> m_vecThread;
@@ -75,8 +79,8 @@ namespace NSQTOOL
 		CThreadMgr() { }
 	public:
 		void RegisterThreadPool(CThreadPool *pThreadPool);
-		void SendCmd(int32_t iThreadType, int32_t iThreadNum, CCommand &cCmd); 
-		void PostCmd(int32_t iThreadType, int32_t iThreadNum, CCommand &cCmd); 
+		void SendCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum); 
+		void PostCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum); 
 		void Stop();
         void Run();
 	private:

@@ -143,10 +143,10 @@ namespace NSQTOOL
 			}
 			else if (m_iFrameType == FrameTypeError)
 			{
-				return -1;
+				return ;
 			}
 
-			return 0;
+			return ;
 		}
 
 		int32_t Encode(char *buf, int32_t &buflen)	

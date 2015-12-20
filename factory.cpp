@@ -1,16 +1,19 @@
 #include "factory.h"
+#include "thread.h"
 #include "net_thread.h"
-#include "listen_thread.h"
 #include "timer_thread.h"
 #include "main_thread.h"
 #include "nsqd_protocol.h"
 #include "nsqlookup_protocol.h"
+#include "handler.h"
+#include "tcp_handler.h"
+#include "listen_handler.h"
 #include "nsqd_handler.h"
 #include "nsqlookup_handler.h"
 
 namespace NSQTOOL
 {
-    Thread *CNsqFactory::GenThread(int iThreadType, int iThreadId)
+    CThread *CNsqFactory::GenThread(int iThreadType, int iThreadId)
         {
             switch(iThreadType)
             {
@@ -43,11 +46,11 @@ namespace NSQTOOL
             {
                 case NSQLOOKUP_TYPE:
                 {
-                    return new CNsqLookupResponce(); 
+                    return new CNsqLookupResponse(); 
                 }
-                case NSQ_TYPE:
+                case NSQD_TYPE:
                 {
-                    return new CNsqdResponce(); 
+                    return new CNsqdResponse(); 
                 }
                 default:
                 {
@@ -59,7 +62,7 @@ namespace NSQTOOL
         CHandler *CNsqFactory::GenHandler(int iProtocolType, int iProtocolId, 
                 int iHandlerId, CThread *pThread)
         {
-            switch (iPorotocolType) 
+            switch (iProtocolType) 
             {
                 case NSQLOOKUP_TYPE:
                 {

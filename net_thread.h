@@ -4,6 +4,7 @@
 #include "event2/event.h"
 #include "event2/bufferevent.h"
 #include "event2/buffer.h"
+#include "event2/listener.h"
 #include <string>
 #include <set>
 #include <map>
@@ -13,6 +14,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+using namespace std;
 
 namespace NSQTOOL
 {
@@ -56,16 +59,16 @@ namespace NSQTOOL
 	public:
 		struct SListenInfo
 		{
-            std::string m_strHost;
+            string m_strHost;
             uint16_t m_iPort;
 			int m_iProtocolType;	
-            int m_iProtocolId
+            int m_iProtocolId;
 			evconnlistener *m_pListener;
             CListenHandler *m_pListenHandler;
 		};
 
 
-		int32_t Init(int32_t iThreadType, int32_t iThreadId, void *pArg);
+		CListenThread(int32_t iThreadType, int32_t iThreadId);
 		void RealRun();
 		static void OnStaticRead(struct evconnlistener *pListener, 
                             evutil_socket_t iAcceptHandle, 
