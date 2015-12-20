@@ -1,6 +1,6 @@
 #ifndef _NET_THREAD_H_
 #define _NET_THREAD_H_
-#include "nsq_thread.h"
+#include "thread.h"
 #include "event2/event.h"
 #include "event2/bufferevent.h"
 #include "event2/buffer.h"
@@ -16,6 +16,9 @@
 
 namespace NSQTOOL
 {
+    class CTcpHandler;
+    class CListenHandler;
+
 	class CNetThread:public CThread
 	{
 	public:
@@ -26,8 +29,7 @@ namespace NSQTOOL
             int m_iFd;
             string m_strHost;
             uint16_t m_iPort;
-			bufferevent *m_pBufevt;
-            CNetHandler *m_pHandler;
+            CListenHandler *m_pListenHandler;
 		};
 
 		CNetThread(int32_t iThreadType, int32_t iThreadId);
@@ -38,17 +40,15 @@ namespace NSQTOOL
 		static void OnStaticError(struct bufferevent *pBufevt, 
                                 short iTemp, void *arg);
 		void RealRun();
-        void DestoryFd(uint64_t iHandleId);
+        void DestoryHandler(uint64_t iHandlerId);
+        int SendData(struct bufferevent *pBufevt, const std::string *pString);
     protected:
 		void RealProcessCmd(CCommand &cCmd);
-		int  SendData(int iFd, const std::string *pString);
     private:
 		void OnRead(struct bufferevent *pBufevt, void *arg);
 		void OnError(struct bufferevent *pBufevt, short iTemp, void *arg);
 	private:
 		event_base *m_pEventBase;
-		std::map<uint64_t, SNetContext *> m_mapNetContext;
-        pthread_mutex_t m_mutex;
 	};
 
 	class CListenThread:public CThread
@@ -61,7 +61,7 @@ namespace NSQTOOL
 			int m_iProtocolType;	
             int m_iProtocolId
 			evconnlistener *m_pListener;
-            CHandler *m_pHandler;
+            CListenHandler *m_pListenHandler;
 		};
 
 
@@ -71,13 +71,11 @@ namespace NSQTOOL
                             evutil_socket_t iAcceptHandle, 
                             struct sockaddr *pAddr, int socklen, void *pArg);		
 		void RealProcessCmd(CCommand &cCmd);
-    private:
-		 void OnRead(struct evconnlistener *pListener, evutil_socket_t iAcceptHandle, 
+        void DestoryHandler(uint64_t iHandlerId);
+		void OnRead(struct evconnlistener *pListener, evutil_socket_t iAcceptHandle, 
                             struct sockaddr *pAddr, int socklen, void *pArg);		
-
 	private:
 		event_base *m_pEventBase;
-		std::map<int, SListenInfo*> m_mapListen;
 	};
 };
 #endif

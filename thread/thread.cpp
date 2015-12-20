@@ -3,8 +3,12 @@ namespace NSQTOOL
 {
     CThread::CThread(int32_t iThreadType, int32_t iThreadId, void *pArg = NULL)
     {
-        pthread_mutex_init(&m_mutex, NULL);
-        pthread_mutex_init(&m_mutexSync, NULL);
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
+        pthread_mutex_init(&m_mutex, &m_mutex);
+        pthread_mutex_init(&m_mutexSync, &m_mutex);
+        pthread_mutexattr_destory(&m_mutex);
         pthread_cond_init(&m_cond, NULL);
         m_bStop = false;
 
@@ -142,14 +146,18 @@ namespace NSQTOOL
 
     virtual CThread::DestoryHandler(uint64_t iHandleId)
     {
+        pthread_mutex_lock(&m_mutex);
+
         if (m_mapHandler.find(iHandleId) != m_mapHandler.end())
         {
             delete m_mapHandler[iHandleId];
             m_mapHandler.erase(iHandleId);
         }
+
+        pthread_mutex_unlock(&m_mutex);
     }
 
-    uint64_t CThread::GetHandleId()
+    uint64_t CThread::GetHandlerId()
     {
         return ++m_iHandleIdInc; 
     }

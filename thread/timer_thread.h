@@ -7,7 +7,7 @@
 
 #ifndef _TIMER_THREAD_H
 #define _TIMER_THREAD_H
-#include "nsq_thread.h"
+#include "thread.h"
 #include "event2/event.h"
 #include <string>
 

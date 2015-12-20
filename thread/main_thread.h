@@ -7,7 +7,7 @@
 
 #ifndef _MAIN_THREAD_H
 #define _MAIN_THREAD_H
-#include "nsq_thread.h"
+#include "thread.h"
 namespace NSQTOOL
 {
     class CMainThread:public CThread

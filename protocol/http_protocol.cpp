@@ -4,7 +4,8 @@
 	> Mail: 
 	> Created Time: 2015年10月25日 星期日 15时53分52秒
  ************************************************************************/
-#include "httpprotocol.h"
+#include "http_protocol.h"
+
 namespace NSQTOOL
 {
     void CHttpRequest::SetRequest(const char *pUrl, const char *pHost,

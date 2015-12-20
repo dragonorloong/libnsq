@@ -1,84 +1,7 @@
-#include "nsqprotocol.h"
+#include "nsqlookup_protocol.h"
 
 namespace NSQTOOL
 {
-
-int32_t CNsqdResponse::Need(const char *pData, int32_t iLength)
-{
-    if ((iLength==0) && (m_strStream.empty()))
-    {
-        fprintf(stdout, "null, needLen = 4\n");
-        return 4;
-    }
-
-    fprintf(stdout, "stream = %d, length = %d\n", m_strStream.length(), iLength);
-
-    if (iLength != 0)
-    {
-	    m_strStream.append(pData, iLength);
-    }
-
-    fprintf(stdout, "stream = %d, length = %d\n", m_strStream.length(), iLength);
-
-	size_t needLen=0;
-	if(m_strStream.length()<4){
-		needLen=4;
-	}else{
-		needLen = ntohl(*(int32_t*)m_strStream.c_str()) + 4;
-	}
-
-    fprintf(stdout, "needLen = %d, strStream = %d\n", needLen, m_strStream.length());
-	if(needLen<=m_strStream.length()){
-		Decode(m_strStream.c_str(), needLen);
-        m_iCurPkgLength = needLen;
-		return 0;
-	}
-
-	return needLen - m_strStream.length();
-}
-
-int32_t CNsqdResponse::Process(CNetThread::SNetContext *pContext, CNetThread *pThread)
-{
-    fprintf(stdout, "CNsqdResponse::Process\n");
-	if (GetFrameType() == CNsqdResponse::FrameTypeResponse)
-	{
-		if (GetResponce() ==  "_heartbeat_")
-		{
-            fprintf(stdout, "_hearbeat_\n");
-			CNsqdRequest cNsqdRequest;
-			cNsqdRequest.Nop();
-			//PutMsgToSendList(buff, cNsqdRequest.GetBuff().size(), true);
-            pThread->SendData(pContext->m_iHandle, &cNsqdRequest.Encode());
-		}
-
-        fprintf(stdout, "response = %s\n", GetResponce().c_str());
-	}
-	else if (GetFrameType() == CNsqdResponse::FrameTypeMessage)
-	{
-        std::string &strMsgId = GetMsgId();
-        std::string &strBody = GetBody();
-        fprintf(stdout, "msg:%s\n", strBody.c_str());
-		CNsqdRequest cNsqdRequest;
-		cNsqdRequest.Finish(strMsgId);
-        pThread->SendData(pContext->m_iHandle, &cNsqdRequest.Encode());
-    }		
-}
-
-void CNsqdResponse::OnConnect(CNetThread::SNetContext *pContext, CNetThread *pThread)
-{
-    fprintf(stdout, "NsqdResponse:OnConnect\n");
-	CNsqdRequest cNsqdRequest;
-	cNsqdRequest.Megic();	
-	cNsqdRequest.Subscribe("lhb", "test");
-	cNsqdRequest.Ready(100);
-    fprintf(stdout, "OnConnect:m_iHandle = %d\n", pContext->m_iHandle);
-    pThread->SendData(pContext->m_iHandle, &cNsqdRequest.Encode());
-}
-
-void CNsqdResponse::OnError(CNetThread::SNetContext *pContext, CNetThread *pThread, short iEvent)
-{
-    fprintf(stdout, "OnError, iEvent = %d\n", iEvent);
-}
 
 int32_t CNsqLookupResponse::Process(CNetThread::SNetContext *pContext, CNetThread *pThread)
 {
@@ -100,7 +23,7 @@ void CNsqLookupResponse::OnError(CNetThread::SNetContext *pContext, CNetThread *
     fprintf(stdout, "CNsqLookupResponse:OnError, iEvent = %d\n", iEvent);
 }
 
-int32_t CNsqLookupResponse::DecodeResponseBody()
+int32_t CNsqLookupResponse::Decode()
 {
     string &strBodyTemp = CHttpResponse::GetBody();
     const char *chBody = strBodyTemp.c_str();

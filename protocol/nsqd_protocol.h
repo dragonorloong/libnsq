@@ -1,5 +1,5 @@
-#ifndef __NSQ_PROTOCOL_H_
-#define __NSQ_PROTOCOL_H_
+#ifndef __NSQD_PROTOCOL_H_
+#define __NSQD_PROTOCOL_H_
 #include <string>
 #include <arpa/inet.h>
 #include "protocol.h"
@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <vector>
-#include "httpprotocol.h"
 
 using namespace std;
 namespace NSQTOOL
@@ -110,7 +109,7 @@ namespace NSQTOOL
 		string m_strBuff;
 	};
 
-	class CNsqdResponse:public CHttpResponse 
+	class CNsqdResponse:public CProtocol 
 	{
 	public:	
 		enum {FrameTypeResponse, FrameTypeError, FrameTypeMessage};
@@ -123,8 +122,9 @@ namespace NSQTOOL
 				(uint64_t)(data[1])<<48 | (uint64_t)(data[0])<<56;
 		}
 
-		int32_t Decode(const char *buf, int32_t buflen)
+		void Decode()
 		{
+            const char *buf = m_strStream.c_str();
 			m_iTotalLen = ntohl(*(int32_t*)buf);	
 			m_iFrameType = ntohl(*(int32_t*)(buf+4));
 
@@ -156,9 +156,6 @@ namespace NSQTOOL
 		}
 
 		int32_t Need(const char *pData, int32_t iLength);
-        int32_t Process(CNetThread::SNetContext *pContext, CNetThread *pThread);
-        void OnConnect(CNetThread::SNetContext *pContext, CNetThread *pThread);
-        void OnError(CNetThread::SNetContext *pContext, CNetThread *pThread, short iEvent);
 	public:
 
 		int32_t GetFrameType()
@@ -204,53 +201,6 @@ namespace NSQTOOL
 		string		m_strMsgId;
 		string		m_strMsgBody;
         string      m_strResponse;
-	};
-
-	// 每个 Record 只能是一种类型：请求包或者应答包
-	class CNsqLookupResponse:public CHttpResponse
-	{
-	public:
-		struct SProducers
-		{
-			string m_strBroadcastAddres;	
-			string m_strHostName;
-			int m_iTcpPort;
-			int m_iHttpPort;
-			string m_strVersion;
-		};
-
-        int32_t Process(CNetThread::SNetContext *pContext, CNetThread *pThread);
-        void OnConnect(CNetThread::SNetContext *pContext, CNetThread *pThread);
-        void OnError(CNetThread::SNetContext *pContext, CNetThread *pThread, short iEvent);
-
-
-		int32_t DecodeResponseBody();
-		
-		string &GetStatus()
-		{
-			return m_strStatus;	
-		}
-
-		string &GetStatusTxt()
-		{
-			return m_strStatusTxt;	
-		}
-
-		vector<string> &GetChannels()
-		{
-			return m_vecChannels;	
-		}
-
-		vector<SProducers> &GetProducers()
-		{
-			return m_vecProducers;	
-		}
-
-	private:
-		string m_strStatus;
-		string m_strStatusTxt;
-		vector<string> m_vecChannels;
-		vector<SProducers> m_vecProducers;
 	};
 };
 #endif

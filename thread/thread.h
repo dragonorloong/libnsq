@@ -25,12 +25,12 @@ namespace NSQTOOL
 		void Run();
 		void Stop();
 		virtual void RealRun();
+        virtual void DestoryHandler(uint64_t iHandleId);
 
     protected:
 		virtual void RealProcessCmd(CCommand &cCmd);
 		int32_t ProcessCmd();
-        virtual DestoryHandler(uint64_t iHandleId);
-        uint64_t GetHandleId();
+        uint64_t GetHandlerId();
 
     public:
 		static void *ThreadFunc(void *pArgs);
