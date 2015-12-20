@@ -2,7 +2,7 @@
 #define _THREAD_H_
 #include <pthread.h>
 #include "command.h"
-#include "tool.h"
+#include "singleton.h"
 #include <stdint.h>
 #include <map>
 #include <list>
