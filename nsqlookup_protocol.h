@@ -26,12 +26,6 @@ namespace NSQTOOL
 			string m_strVersion;
 		};
 
-        /*int32_t Process(CNetThread::SNetContext *pContext, CNetThread *pThread);
-        void OnConnect(CNetThread::SNetContext *pContext, CNetThread *pThread);
-        void OnError(CNetThread::SNetContext *pContext, CNetThread *pThread, short iEvent);
-        */
-
-
 		void Decode();
 		
 		string &GetStatus()

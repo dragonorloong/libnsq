@@ -16,7 +16,7 @@ namespace NSQTOOL
                 uint64_t iHandleId, CThread *pThread);
         virtual void OnConnect();
         virtual void OnError(int iErrorNo);
-        virtual void ProcessRead();
+        virtual int ProcessRead();
         virtual void ProcessCmd(CCommand &cCmd);
     };
 };

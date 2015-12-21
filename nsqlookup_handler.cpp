@@ -17,11 +17,21 @@ namespace NSQTOOL
 
         void CNsqLookupHandler::OnConnect()
         {
-                        
+            CLookupContext cLookup = CMainThread::GetLookupContext(m_iProtocolId);
+            CHttpRequest cHttpRequest;
+            string strUrl = "/lookup?topic=";
+            strUrl += cLookup.m_strTopic;
+            string strAddr = cLookup.m_strHost;
+            strAddr += ":";
+            strAddr += itoa(cLookup.m_iPort);
+            cHttpRequest.SetRequest(strUrl, strAddr);
+            dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
+                    &cHttpRequest.Encode());
         }
 
-        void CTcpHandler::ProcessRead()
+        int CNsqLookupHandler::ProcessRead()
         {
-             
+            
         }
+
 };

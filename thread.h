@@ -79,8 +79,8 @@ namespace NSQTOOL
 		CThreadMgr() { }
 	public:
 		void RegisterThreadPool(CThreadPool *pThreadPool);
-		void SendCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum); 
-		void PostCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum); 
+		void SendCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum = -1); 
+		void PostCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum = -1); 
 		void Stop();
         void Run();
 	private:

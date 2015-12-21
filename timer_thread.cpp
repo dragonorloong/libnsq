@@ -81,7 +81,6 @@ void CTimerThread::RealProcessCmd(CCommand &cCmd)
         case TIMER_ADD_TYPE:
         {
             STimerInfo *pTimer = (STimerInfo *)cCmd.GetLData();
-            fprintf(stdout, "TIMER_ADD_TYPE:%d\n", pTimer->m_cTimeval.tv_sec);
             event *pEvent = event_new(m_pEventBase, -1, EV_PERSIST, OnStaticTimeOut,pTimer);
             evtimer_add(pEvent, &(pTimer->m_cTimeval));
             char buff[64] = {0};

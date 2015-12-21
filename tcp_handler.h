@@ -21,7 +21,7 @@ namespace NSQTOOL
         virtual void OnConnect();
         virtual void OnError(int iErrorNo);
         virtual int OnRead(const char *pData, int iLength);
-        virtual void ProcessRead();
+        virtual int ProcessRead();
         virtual void ProcessCmd(CCommand &cCmd);
 
         void SetListenHandler(CListenHandler *pListenHandler)

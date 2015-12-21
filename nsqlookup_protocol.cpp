@@ -57,7 +57,6 @@ void CNsqLookupResponse::Decode()
 
     for (size_t i = 0; i < channel.size(); ++i)
     {
-        fprintf(stdout, "i = %d, channel = %s\n", i, channel[int(i)].asString().c_str());
         m_vecChannels.push_back(channel[int(i)].asString());	
     }
 
@@ -73,7 +72,7 @@ void CNsqLookupResponse::Decode()
         item.m_iHttpPort = producers[int(i)]["http_port"].asInt();
         item.m_strVersion = producers[int(i)]["version"].asString();
 
-        fprintf(stdout, "i = %d, boardAddres = %s, hostName = %s, tcpPort = %d, httpPort = %d, version = %s\n", 
+        fprintf(stdout, "i = %ld, boardAddres = %s, hostName = %s, tcpPort = %d, httpPort = %d, version = %s\n", 
                i, item.m_strBroadcastAddres.c_str(), item.m_strHostName.c_str(), item.m_iTcpPort, item.m_iHttpPort, item.m_strVersion.c_str());
 
         m_vecProducers.push_back(item);

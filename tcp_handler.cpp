@@ -37,7 +37,11 @@ namespace NSQTOOL
             while (iNeed == 0)
             {
                 m_pProtocol->Decode();
-                ProcessRead(); 
+                if (ProcessRead() != 0)
+                {
+                    return -1;     
+                }
+
                 m_pProtocol->NextPkg();
                 iNeed = m_pProtocol->Need(NULL, 0);
             }
@@ -45,7 +49,7 @@ namespace NSQTOOL
             return iNeed;
         }
 
-        void CTcpHandler::ProcessRead()
+        int CTcpHandler::ProcessRead()
         {
              
         }

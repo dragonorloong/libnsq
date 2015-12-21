@@ -156,7 +156,10 @@ namespace NSQTOOL
 
     uint64_t CThread::GetHandlerId()
     {
-        return ++m_iHandleIdInc; 
+        pthread_mutex_lock(&m_mutex);
+        ++m_iHandleIdInc; 
+        pthread_mutex_unlock(&m_mutex);
+        return m_iHandleIdInc; 
     }
 
     void *CThread::ThreadFunc(void *pArgs)

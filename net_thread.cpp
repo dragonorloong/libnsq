@@ -30,14 +30,15 @@ namespace NSQTOOL
         char *pData = new char[iLength + 1];
         bufferevent_read(pBufevt, pData, iLength);			
         pData[iLength] = '\0';
+
+        //iNeedLength 证明包处理出错，已经析构掉了handler相关的一些
         int iNeedLength = pHandler->OnRead(pData, iLength); 
 
-        while (iNeedLength == 0)
+        if (iNeedLength > 0)
         {
-            iNeedLength = pHandler->OnRead(NULL, 0);
+            bufferevent_setwatermark(pBufevt, EV_READ, iNeedLength, 0);
         }
-                
-        bufferevent_setwatermark(pBufevt, EV_READ, iNeedLength, 0);
+
         delete pData;
         pthread_mutex_unlock(&m_mutex);
     }
@@ -80,13 +81,22 @@ namespace NSQTOOL
         pthread_mutex_unlock(&m_mutex);
     }
 
-    int CNetThread::SendData(struct bufferevent *pBufevt, const std::string *pString)
+    int CNetThread::SendData(struct bufferevent *pBufevt, 
+                            const std::string *pString,
+                            bool bIsCopy)
+                            
     {
         pthread_mutex_lock(&m_mutex);
 
         int iRet = bufferevent_write(pBufevt, pString->c_str(), pString->size());	
         
         pthread_mutex_unlock(&m_mutex);
+
+        if (!bIsCopy)
+        {
+            delete pString;
+        }
+
         return iRet;
     }
 
@@ -243,7 +253,7 @@ namespace NSQTOOL
 
         cCmd.SetLData(pNetContext);
 
-        CThreadMgrSingleton::GetInstance()->SendCmd( NET_THREAD_TYPE, 0, cCmd);
+        CThreadMgrSingleton::GetInstance()->SendCmd( NET_THREAD_TYPE, cCmd);
 
         pthread_mutex_unlock(&m_mutex); 
     }

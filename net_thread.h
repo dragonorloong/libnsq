@@ -44,7 +44,9 @@ namespace NSQTOOL
                                 short iTemp, void *arg);
 		void RealRun();
         void DestoryHandler(uint64_t iHandlerId);
-        int SendData(struct bufferevent *pBufevt, const std::string *pString);
+        int SendData(struct bufferevent *pBufevt, 
+                    const std::string *pString, 
+                    bool bIsCopy = false);
     protected:
 		void RealProcessCmd(CCommand &cCmd);
     private:

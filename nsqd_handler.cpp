@@ -26,7 +26,7 @@ namespace NSQTOOL
             }
         }
 
-        void CNsqdHandler::ProcessRead()
+        int CNsqdHandler::ProcessRead()
         {
              
         }
