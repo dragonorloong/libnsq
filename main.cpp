@@ -18,35 +18,16 @@ using namespace NSQTOOL;
 int g_iListenType = 1;
 int g_iRecvType = 2;
 
+void ConsumerCallBack(int iProtocolId, const string &strMsgId, const string &strMsgBody)
+{
+    printf("iProtocolId = %d, msg body = %s\n", iProtocolId, strMsgBody.c_str());
+}
+
 int main()
 {
-  /*  CThreadPool<CListenThread> *pListenThreadPool = new CThreadPool<CListenThread>();
-    pListenThreadPool->Init(g_iListenType, 1, NULL);
-    CThreadMgrSingleton::GetInstance()->RegisterThreadPool(pListenThreadPool);
-    CThreadPool<CNetThread> *pNetThreadPool = new CThreadPool<CNetThread>();
-    pNetThreadPool->Init(g_iRecvType, 1, NULL);
-    CThreadMgrSingleton::GetInstance()->RegisterThreadPool(pNetThreadPool);
-    pListenThreadPool->Run();
-    pNetThreadPool->Run();
-    CCommand cmd(NET_CONNECT_TYPE);
-    CNetThread::SNetContext *pNetContext = new CNetThread::SNetContext;
-    pNetContext->m_strHost = "127.0.0.1";
-    pNetContext->m_iPort = 4161;
-    pNetContext->m_iPkgType = 3;
-    pNetContext->m_cAddr.m_iDstType = 2;
-    pNetContext->m_cAddr.m_iDstTid = 0;
-    cmd.SetLData(pNetContext);
-    CCommand::CCmdAddr cCmdAddr;
-    cCmdAddr.m_iDstTid = 0;
-    cCmdAddr.m_iDstType = 2;
-    cmd.SetAddr(cCmdAddr);
-    CThreadMgrSingleton::GetInstance()->PostCmd(g_iRecvType, cmd, 0);
-  */  
-    CMainThread *pThread = new CMainThread;
-    pThread->Init(MAIN_THREAD_TYPE, 0, NULL);
-    pThread->Run();
-   
-
+    CMainThread::InitSuperServer();
+    CMainThread::SetConsumer("10.10.159.130", 4161, "Login", "test", ConsumerCallBack);
+    CMainThread::StartSuperServer();
     while(1)
     sleep(100);
 }

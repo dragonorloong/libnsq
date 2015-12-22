@@ -37,7 +37,7 @@ namespace NSQTOOL
 
 		CNetThread(int32_t iThreadType, int32_t iThreadId);
 
-        ~CNetThread() {pthread_mutex_destroy(&m_mutex);}
+        ~CNetThread() {}
 
 		static void OnStaticRead(struct bufferevent *pBufevt, void *arg);
 		static void OnStaticError(struct bufferevent *pBufevt, 

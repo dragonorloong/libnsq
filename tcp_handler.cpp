@@ -34,6 +34,13 @@ namespace NSQTOOL
         {
             int iNeed = m_pProtocol->Need(pData, iLength); 
 
+            if (iLength == 0)
+            {
+                fprintf(stdout, "Need length = %d\n", iNeed);
+            }
+
+            int i = 0;
+
             while (iNeed == 0)
             {
                 m_pProtocol->Decode();
@@ -44,6 +51,8 @@ namespace NSQTOOL
 
                 m_pProtocol->NextPkg();
                 iNeed = m_pProtocol->Need(NULL, 0);
+
+                fprintf(stdout, "i = %d, iNeed = %d\n", i, iNeed);
             }
 
             return iNeed;
@@ -52,5 +61,9 @@ namespace NSQTOOL
         int CTcpHandler::ProcessRead()
         {
              
+        }
+        
+        void CTcpHandler::ProcessCmd(CCommand &cCmd)
+        {
         }
 };

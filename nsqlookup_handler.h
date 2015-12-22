@@ -14,9 +14,7 @@ namespace NSQTOOL
         CNsqLookupHandler(int iProtocolType, int iProtocolId,
                 uint64_t iHandleId, CThread *pThread);
         virtual void OnConnect();
-        virtual void OnError(int iErrorNo);
         virtual int ProcessRead();
-        virtual void ProcessCmd(CCommand &cCmd);
     };
 };
 #endif

@@ -11,7 +11,6 @@ namespace NSQTOOL
         :CThread(iThreadType, iThreadId)
     {
         m_pEventBase = event_base_new();			
-        pthread_mutex_init(&m_mutex, NULL);
     }
 
     void CNetThread::OnStaticRead(struct bufferevent *pBufevt, void *arg)
@@ -130,18 +129,20 @@ namespace NSQTOOL
                 
                 if (iRet != 0)
                 {
+                    fprintf(stdout, "socket connect return error: %s,%d\n", pNetContext->m_strHost.c_str(), pNetContext->m_iPort);
                     bufferevent_free(bufevt);
                     bufevt = NULL;
                     //不肯定bufferevent_free是否会释放socket，后续测试
-                    fprintf(stderr, "socket connect return error: %s,%d\n", pNetContext->m_strHost.c_str(), pNetContext->m_iPort);
+                    fprintf(stdout, "socket connect return error: %s,%d\n", pNetContext->m_strHost.c_str(), pNetContext->m_iPort);
                     pHandler->OnError(errno);
                     delete pNetContext;
                     delete pHandler;
                     break;
                 }
 
+                fprintf(stdout, "NET_THREAD_TYPE: connect return iRet = %d\n", iRet);
                 bufferevent_setcb(bufevt, OnStaticRead, NULL, OnStaticError, pHandler);
-                bufferevent_enable(bufevt, EV_READ|EV_PERSIST|EV_ET);		
+                bufferevent_enable(bufevt, EV_READ|EV_PERSIST);		
 
                 //设置读入最低水位，防止无效回调
                 bufferevent_setwatermark(bufevt, EV_READ, 

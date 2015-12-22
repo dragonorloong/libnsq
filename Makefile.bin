@@ -2,7 +2,7 @@
 SRC = main.cpp 
 
 #Application name
-APP = data_test
+APP = bin_test
 
 #Application type BIN SO LIB
 APP_TYPE = BIN 
