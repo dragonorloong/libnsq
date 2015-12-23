@@ -125,7 +125,6 @@ namespace NSQTOOL
 		void Decode()
 		{
             const char *buf = m_strStream.c_str();
-            fprintf(stdout, "buf = %s\n", buf);
 			m_iTotalLen = ntohl(*(int32_t*)buf);	
 			m_iFrameType = ntohl(*(int32_t*)(buf+4));
 

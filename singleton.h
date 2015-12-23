@@ -1,41 +1,60 @@
-#ifndef __SINGLETON_H_
-#define __SINGLETON_H_
-#include <stdio.h>
+/*************************************************************************
+	> File Name: singleton.h
+	> Author: 
+	> Mail: 
+	> Created Time: 2015年10月20日 星期二 16时44分45秒
+ ************************************************************************/
+
+#ifndef _SINGLETON_H
+#define _SINGLETON_H
+#include "guard.h"
+
 namespace NSQTOOL
 {
-	//暂时不加锁,以后有时间再做
-	template<typename T>
-	class CSingleton
-	{
-	public:	
-		static T *GetInstance()
-		{
-			if (m_pInstance == NULL)
-			{
-				m_pInstance = new T;
-			}
+    template<typename T>
+    class CSingleton
+    {
+    public:
+        static T *GetInstance()
+        {
+            if (m_instance == NULL)
+            {
+                CGuard<CLock> guard(&m_lock); 
 
-			return m_pInstance;
-		}
+                if (m_instance == NULL)
+                {
+                    m_instance = new T(); 
+                }
+            }
 
-		static void RealseInstance()
-		{
-			if (m_pInstance != NULL)
-			{
-				delete m_pInstance;
-				m_pInstance = NULL;
-			}
-		}
+            return m_instance;
+        }
 
-	private:
-		CSingleton()
-		{
-		}
-		static T *m_pInstance;
-	};
+        static void ReleaseInstance()
+        {
+            CGuard<CLock> guard(&m_lock);         
 
-	template<typename T>
-	T *CSingleton<T>::m_pInstance = NULL;
-	
+            if (m_instance != NULL)
+            {
+                delete m_instance; 
+                m_instance = NULL;
+            }
+        }
+
+    private:
+        CSingleton()
+        {
+        }
+
+    private:
+        static T *m_instance;
+        static CLock m_lock;
+    };
+
+    template<typename T>
+    T *CSingleton<T>::m_instance = NULL;
+
+    template<typename T>
+    CLock CSingleton<T>::m_lock;
 };
 #endif

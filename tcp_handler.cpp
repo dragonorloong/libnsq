@@ -1,6 +1,7 @@
 #include "tcp_handler.h"
 #include "thread.h"
 #include "protocol.h"
+#include <stdio.h>
 
 namespace NSQTOOL
 {

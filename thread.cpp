@@ -14,10 +14,9 @@ namespace NSQTOOL
         pthread_cond_init(&m_cond, NULL);
         m_bStop = false;
 
-        fprintf(stdout, "Init ThreadType = %d, iThreadId = %d\n", iThreadType, iThreadId);
-
         m_iThreadType = iThreadType;
         m_iThreadId = iThreadId;
+        NsqLogPrintf(LOG_DEBUG, "Init ThreadType = %d, iThreadId = %d\n", iThreadType, iThreadId);
         m_iHandleIdInc = 0;
     }
     
@@ -54,7 +53,6 @@ namespace NSQTOOL
         
         if (m_lstCmd.size() == 1)
         {
-            fprintf(stdout, "post size = 1, type = %d, signal\n", m_iThreadType);
             pthread_cond_signal(&m_cond);
         }
 
@@ -71,13 +69,13 @@ namespace NSQTOOL
         }
         else
         {
-           if (m_mapHandler.find(cCmd.GetAddr().m_iDstHandleId) != m_mapHandler.end())
+           if (m_mapHandler.find(cCmd.GetAddr().m_iDstHandlerId) != m_mapHandler.end())
            {
-                m_mapHandler[cCmd.GetAddr().m_iDstHandleId]->ProcessCmd(cCmd);         
+                m_mapHandler[cCmd.GetAddr().m_iDstHandlerId]->ProcessCmd(cCmd);         
            }
            else
            {
-                fprintf(stdout, "error cmd\n"); 
+                NsqLogPrintf(LOG_DEBUG, "no found this handler handler id = ", cCmd.GetAddr().m_iDstHandlerId);
            }
         }
     }
@@ -92,7 +90,6 @@ namespace NSQTOOL
             
             if (m_lstCmd.size() == 0)
             {
-                fprintf(stdout, "size() reset 0 type = %d\n", m_iThreadType);
                 pthread_mutex_unlock(&m_mutex);
                 return iRet;
             }
@@ -102,7 +99,6 @@ namespace NSQTOOL
             pthread_mutex_unlock(&m_mutex);
             
             pthread_mutex_lock(&m_mutexSync);
-            fprintf(stdout, "realProcesCmd type = %d\n", m_iThreadType);
             RealProcessCmd(cCmd);
             pthread_mutex_unlock(&m_mutexSync);
             
@@ -117,15 +113,12 @@ namespace NSQTOOL
         while (!m_bStop)
         {
             int32_t iRet = ProcessCmd();
-            fprintf(stdout, "iType = %d, iRet = %d\n", m_iThreadType, iRet);            
 
             if (iRet ==0 && !m_bStop)
             {
-                fprintf(stdout, "size = 0, type = %d, wait\n", m_iThreadType);
                 pthread_mutex_lock(&m_mutex);
                 pthread_cond_wait(&m_cond, &m_mutex);
                 pthread_mutex_unlock(&m_mutex);
-                fprintf(stdout, "size = 1, alive, type = %d\n", m_iThreadType);
             }
         }	
     }
@@ -170,26 +163,21 @@ namespace NSQTOOL
 
     void CThreadMgr::RegisterThreadPool(CThreadPool *pThreadPool)
     {
-        fprintf(stdout, "threadtype = %d\n", pThreadPool->GetThreadType());
         m_mapThreadPool[pThreadPool->GetThreadType()] = pThreadPool;
     }
 
     void CThreadMgr::SendCmd(int32_t iThreadType, CCommand &cCmd,int32_t iThreadNum) 
     {
-        fprintf(stdout, "SendCmd threadtype = %d\n", iThreadType);
         if (m_mapThreadPool.find(iThreadType) != m_mapThreadPool.end())
         {
-            fprintf(stdout, "is not NULL\n");
             m_mapThreadPool[iThreadType]->SendCmd(cCmd, iThreadNum);
         }
     }
 
     void CThreadMgr::PostCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum) 
     {
-        fprintf(stdout, "CThreadMgr::PostCmd begin iThreadType = %d\n", iThreadType);
         if (m_mapThreadPool.find(iThreadType) != m_mapThreadPool.end())
         {
-            fprintf(stdout, "CThreadMgr::PostCmd is not null\n");
             m_mapThreadPool[iThreadType]->PostCmd(cCmd, iThreadNum);
         }
     }
@@ -224,6 +212,8 @@ namespace NSQTOOL
         
         for (int i = 0; i < iThreadNum; ++i)
         {
+            fprintf(stdout, "snprintf %d, %d\n", iThreadType, i);
+            NsqLogPrintf(LOG_DEBUG, "ThreadPool ThreadType = %d, iThreadId = %d\n", iThreadType, i);
             CThread *pThread = CSingletonNsqFactory::GetInstance()->GenThread(iThreadType, i); 
             m_vecThread.push_back(pThread);  
         }

@@ -15,19 +15,29 @@
 #include "main_thread.h"
 using namespace std;
 using namespace NSQTOOL;
-int g_iListenType = 1;
-int g_iRecvType = 2;
 
 void ConsumerCallBack(int iProtocolId, const string &strMsgId, const string &strMsgBody)
 {
     printf("iProtocolId = %d, msg body = %s\n", iProtocolId, strMsgBody.c_str());
 }
 
+void NsqLogCallBack(int iLogLevel, const char *pLogMsg)
+{
+    printf("%s\n", pLogMsg);
+}
+
 int main()
 {
-    CMainThread::InitSuperServer();
+    CMainThread::InitSuperServer(1, 1, LOG_DEBUG, NsqLogCallBack);
     CMainThread::SetConsumer("10.10.159.130", 4161, "Login", "test", ConsumerCallBack);
+   // CMainThread::SetProducer("10.10.159.130", 4161, "Login", ConsumerCallBack);
     CMainThread::StartSuperServer();
+
+    //sleep(40);
+    //int iRet = CMainThread::ProducerMsg("Login", "test");
+
+    //printf("ProducerMsg iRet = %d\n", iRet);
+
     while(1)
     sleep(100);
 }

@@ -4,6 +4,7 @@
 #include <pthread.h>
 namespace NSQTOOL
 {
+    void NsqLogPrintf(int iLogLevel, const char *pFormat, ...);
 	enum EInternalCmdType
 	{
 		STOP_TYPE = -1,
@@ -30,6 +31,12 @@ namespace NSQTOOL
         NSQD_TYPE = -2,
     };
 
+    enum LOG_LEVEL
+    {
+        LOG_DEBUG = -3,
+        LOG_ERROR = -2
+    };
+
 	class CCommand
 	{
 	public:
@@ -39,8 +46,8 @@ namespace NSQTOOL
 			int32_t m_iSrcType;			
 			int32_t m_iDstTid;
 			int32_t m_iDstType;
-            uint64_t m_iSrcHandleId;
-            uint64_t m_iDstHandleId;
+            uint64_t m_iSrcHandlerId;
+            uint64_t m_iDstHandlerId;
 
             CCmdAddr()
             {
@@ -48,8 +55,8 @@ namespace NSQTOOL
 			    m_iSrcType = -1;			
                 m_iDstTid = -1;
                 m_iDstType = -1;
-                m_iSrcHandleId = -1;
-                m_iDstHandleId = -1;
+                m_iSrcHandlerId = -1;
+                m_iDstHandlerId = -1;
             }
 		};
 

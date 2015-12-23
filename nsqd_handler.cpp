@@ -23,18 +23,20 @@ namespace NSQTOOL
                     cHandlerContext.m_strTopic.c_str(), 
                     cHandlerContext.m_strChannel.c_str());
 
+	        CNsqdRequest cNsqdRequest;
+            cNsqdRequest.Megic();	
+
             //消费者
             if (!cHandlerContext.m_strChannel.empty())
             {
-	            CNsqdRequest cNsqdRequest;
-            	cNsqdRequest.Megic();	
                 cNsqdRequest.Subscribe(cHandlerContext.m_strTopic, cHandlerContext.m_strChannel);                
 	            cNsqdRequest.Ready(100);
-                dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
+            }
+
+            dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
                     &cNsqdRequest.Encode(), true);
 
-                fprintf(stdout, "NSQD_HANDLER OnConnect SendData = %s\n", cNsqdRequest.Encode().c_str());
-            }
+            fprintf(stdout, "NSQD_HANDLER OnConnect SendData = %s\n", cNsqdRequest.Encode().c_str());
             
         }
 

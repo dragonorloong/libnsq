@@ -11,6 +11,7 @@
 #include "handler.h"
 #include "tcp_handler.h"
 #include "nsqlookup_protocol.h"
+#include "guard.h"
 
 namespace NSQTOOL
 {
@@ -26,6 +27,9 @@ namespace NSQTOOL
 
     typedef void (*BIZCALLBACK)(int, const string&, const string&);
 
+
+    typedef void (*LOGCALLBACK)(int, const char *pLogMsg);
+
     struct CNsqLookupContext
     {
         string m_strLookupHost;
@@ -35,6 +39,7 @@ namespace NSQTOOL
         BIZCALLBACK m_funcCallBack;
     };
 
+    void NsqLogPrintf(int iLogLevel, const char *pFormat, ...);
 
     class CMainThread:public CThread
     {
@@ -52,10 +57,13 @@ namespace NSQTOOL
 
         void RealProcessCmd(CCommand &cCmd); 
 
-        static void InitSuperServer();
-        static void StartSuperServer();
+        static void InitSuperServer(int iThreadNum, 
+                             int iConnectNum, 
+                             int iLogLevel = LOG_DEBUG, 
+                             LOGCALLBACK pLogFunc = NULL
+                             );
 
-        static void SetConnectNum(int iProducerNum = 5); //每个生产者连接个数
+        static void StartSuperServer();
 
         static void SetProducer(const string &strLookupHost,
                                 uint16_t iLookupPort, 
@@ -88,7 +96,11 @@ namespace NSQTOOL
         static map<int, CNsqLookupContext> m_mapLookupContext;
         static int m_iConnectNum;
         static int m_iProtocolId;
-        static pthread_mutex_t m_mutex;
+        static int m_iThreadNum;
+        static CLock m_cLock;
+    public:
+        static LOGCALLBACK m_pLogFunc;
+        static int m_iLogLevel;
     };
 };
 
