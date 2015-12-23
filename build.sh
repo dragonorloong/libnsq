@@ -1,8 +1,8 @@
 #!/bin/bash
 CUR_DIR=$(cd `dirname $0`;pwd)
 mkdir -p 3rd
-#git clone git@github.com:nmathewson/Libevent.git 3rd/libevent
-#git clone git@github.com:open-source-parsers/jsoncpp.git 3rd/jsoncpp
+git clone git@github.com:nmathewson/Libevent.git 3rd/libevent
+git clone git@github.com:open-source-parsers/jsoncpp.git 3rd/jsoncpp
 cd 3rd/libevent
 ./autogen.sh
 echo "prefix = ${CUR_DIR}/3rd/libevent/lib"
