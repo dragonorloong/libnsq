@@ -8,7 +8,7 @@ APP = nsqclient
 APP_TYPE = LIB 
 
 #Include
-INCLUDE = -I./3rd/libevent/lib/include/event2 -I./3rd/jsoncpp/lib/include/ 
+INCLUDE = -I./3rd/libevent/lib/include/ -I./3rd/jsoncpp/lib/include/ 
 #-I/usr/local/include/json
 #Link lib 
 LINK_LIB = 

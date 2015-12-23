@@ -10,7 +10,6 @@
 #include <map>
 #include <stdint.h>
 #include <errno.h>
-#include "listener.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
