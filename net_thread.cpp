@@ -21,7 +21,6 @@ namespace NSQTOOL
 
     void CNetThread::OnRead(struct bufferevent *pBufevt, void *arg)
     {
-        fprintf(stdout, "CNetThread::OnRead\n");
         pthread_mutex_lock(&m_mutex);
         CTcpHandler *pHandler =  (CTcpHandler*)arg;
         //内存copy三次，太浪费，后续改进
@@ -55,7 +54,6 @@ namespace NSQTOOL
 
         if (iTemp & BEV_EVENT_CONNECTED)
         {
-            fprintf(stdout, "the client has connected to server\n");
             pHandler->OnConnect();
         }
         else
@@ -69,10 +67,12 @@ namespace NSQTOOL
     void CNetThread::DestoryHandler(uint64_t iHandlerId)
     {
         pthread_mutex_lock(&m_mutex);
-
+        NsqLogPrintf(LOG_DEBUG, "CNetThread::DestoryHandler HandlerId = %d\n", iHandlerId);
         if (m_mapHandler.find(iHandlerId) != m_mapHandler.end())
         {
+            NsqLogPrintf(LOG_DEBUG, "CNetThread::DestoryHandler found\n");
             CTcpHandler *pHandler = dynamic_cast<CTcpHandler *>(m_mapHandler[iHandlerId]);
+            close(bufferevent_getfd(pHandler->GetBufferevent()));
             bufferevent_free(pHandler->GetBufferevent()); 
             CThread::DestoryHandler(iHandlerId);
         }
@@ -99,9 +99,16 @@ namespace NSQTOOL
         return iRet;
     }
 
+    void CNetThread::NotifyWait()
+    {
+        pthread_mutex_lock(&m_mutex);
+        event_base_loopbreak(m_pEventBase); 
+        pthread_mutex_unlock(&m_mutex);
+        CThread::NotifyWait();
+    }
+
     void CNetThread::RealProcessCmd(CCommand &cCmd)
     {
-        fprintf(stdout, "NetThread::ProcessCmd(cmd)\n");
 
         pthread_mutex_lock(&m_mutex);
 
@@ -118,7 +125,6 @@ namespace NSQTOOL
                 sAddr.sin_port = htons(pNetContext->m_iPort);
                 sAddr.sin_family = AF_INET;
 
-                fprintf(stdout, "NET_CONNECT_TYPE:%s,%d\n", pNetContext->m_strHost.c_str(), pNetContext->m_iPort);		
 
                 struct bufferevent * bufevt = bufferevent_socket_new(m_pEventBase, -1, 0);
                 int32_t iRet = bufferevent_socket_connect(bufevt, (sockaddr*)&sAddr, sizeof(sockaddr_in));
@@ -129,18 +135,15 @@ namespace NSQTOOL
                 
                 if (iRet != 0)
                 {
-                    fprintf(stdout, "socket connect return error: %s,%d\n", pNetContext->m_strHost.c_str(), pNetContext->m_iPort);
                     bufferevent_free(bufevt);
                     bufevt = NULL;
                     //不肯定bufferevent_free是否会释放socket，后续测试
-                    fprintf(stdout, "socket connect return error: %s,%d\n", pNetContext->m_strHost.c_str(), pNetContext->m_iPort);
                     pHandler->OnError(errno);
                     delete pNetContext;
                     delete pHandler;
                     break;
                 }
 
-                fprintf(stdout, "NET_THREAD_TYPE: connect return iRet = %d\n", iRet);
                 bufferevent_setcb(bufevt, OnStaticRead, NULL, OnStaticError, pHandler);
                 bufferevent_enable(bufevt, EV_READ|EV_PERSIST);		
 
@@ -189,7 +192,6 @@ namespace NSQTOOL
 
     void CNetThread::RealRun()
     {
-        fprintf(stdout, "CNetThread RealRun\n");
         while (!m_bStop)	
         {
             CThread::ProcessCmd();
@@ -214,7 +216,6 @@ namespace NSQTOOL
 
     void CListenThread::RealRun()
     {
-        fprintf(stdout, "CListenThread RealRun\n");
         while (!m_bStop)	
         {
             ProcessCmd();
@@ -259,9 +260,16 @@ namespace NSQTOOL
         pthread_mutex_unlock(&m_mutex); 
     }
     
+    void CListenThread::NotifyWait()
+    {
+        pthread_mutex_lock(&m_mutex);
+        event_base_loopbreak(m_pEventBase); 
+        pthread_mutex_unlock(&m_mutex);
+        CThread::NotifyWait();
+    }
+
     void CListenThread::RealProcessCmd(CCommand &cCmd)
     {
-        fprintf(stdout, "CListenThread::RealProcessCmd begin\n");
         pthread_mutex_lock(&m_mutex); 
 
         switch(cCmd.GetCmdType())
@@ -269,7 +277,6 @@ namespace NSQTOOL
             case NET_LISTEN_TYPE:
             {
                 SListenInfo *pListenInfo = (SListenInfo *)cCmd.GetLData();		
-                fprintf(stdout, "NET_LISTEN_TYPE:%s_%d\n", pListenInfo->m_strHost.c_str(), pListenInfo->m_iPort);		
 
                 sockaddr_in sAddr;
                 memset(&sAddr, 0, sizeof(sockaddr_in));

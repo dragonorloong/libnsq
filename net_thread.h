@@ -49,6 +49,7 @@ namespace NSQTOOL
                     bool bIsCopy = false);
     protected:
 		void RealProcessCmd(CCommand &cCmd);
+        void NotifyWait();
     private:
 		void OnRead(struct bufferevent *pBufevt, void *arg);
 		void OnError(struct bufferevent *pBufevt, short iTemp, void *arg);
@@ -79,6 +80,9 @@ namespace NSQTOOL
         void DestoryHandler(uint64_t iHandlerId);
 		void OnRead(struct evconnlistener *pListener, evutil_socket_t iAcceptHandle, 
                             struct sockaddr *pAddr, int socklen, void *pArg);		
+
+    protected:
+        void NotifyWait();
 	private:
 		event_base *m_pEventBase;
 	};

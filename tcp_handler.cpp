@@ -37,7 +37,6 @@ namespace NSQTOOL
 
             if (iLength == 0)
             {
-                fprintf(stdout, "Need length = %d\n", iNeed);
             }
 
             int i = 0;
@@ -53,7 +52,6 @@ namespace NSQTOOL
                 m_pProtocol->NextPkg();
                 iNeed = m_pProtocol->Need(NULL, 0);
 
-                fprintf(stdout, "i = %d, iNeed = %d\n", i, iNeed);
             }
 
             return iNeed;

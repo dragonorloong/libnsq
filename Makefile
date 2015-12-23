@@ -2,13 +2,13 @@
 SRC = command.cpp net_thread.cpp thread.cpp timer_thread.cpp main_thread.cpp protocol.cpp  http_protocol.cpp nsqd_protocol.cpp nsqlookup_protocol.cpp factory.cpp handler.cpp tcp_handler.cpp listen_handler.cpp nsqd_handler.cpp nsqlookup_handler.cpp 
 
 #Application name
-APP = data_test
+APP = nsqclient
 
 #Application type BIN SO LIB
 APP_TYPE = LIB 
 
 #Include
-INCLUDE = -I/usr/local/include/event2  
+INCLUDE = -I./3rd/libevent/lib/include/event2 -I./3rd/jsoncpp/lib/include/ 
 #-I/usr/local/include/json
 #Link lib 
 LINK_LIB = 

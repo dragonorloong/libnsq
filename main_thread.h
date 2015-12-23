@@ -88,8 +88,7 @@ namespace NSQTOOL
         static void NsqdReadCallBack(int iProtocolId, const string &strMsgId, const string &strMsgBody);
         static void NsqdErrorCallBack(int iProtocolId);
         static int ProducerMsg(const string &strTopic, const string &strMsg);
-
-        
+        static void OnTimeOut();
     private:
         static map<string, vector<CHandlerContext> > m_mapTopic2Handler;
         static map<int, string> m_mapHandler2Topic;

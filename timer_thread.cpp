@@ -20,8 +20,6 @@ CTimerThread::CTimerThread(int32_t iThreadType, int32_t iThreadId)
     
 void CTimerThread::RealRun()
 { 
-    fprintf(stdout, "CTimerThread RealRun\n");
-
     while (!m_bStop)	
     {
         CThread::ProcessCmd();
@@ -42,38 +40,40 @@ void CTimerThread::OnStaticTimeOut(int iHandle, short iEvent, void *pArg)
 
 void CTimerThread::OnTimeOut(int iHandle, short iEvent, void *pArg)
 {
-    fprintf(stdout, "OnTimeOut begin\n");
     pthread_mutex_lock(&m_mutex);
     STimerInfo *pTimer = (STimerInfo *)pArg;
     char buff[64] = {0};
     snprintf(buff, sizeof(buff), "%d_%d_%d", 
             pTimer->m_iDstType, pTimer->m_iDstTid, pTimer->m_iCmdType);
-    fprintf(stdout, "onTimerOut:%s\n", buff);
 
     CCommand cmd(pTimer->m_iCmdType);
     CCommand::CCmdAddr cAddr;
     cAddr.m_iDstType = pTimer->m_iDstType;
     cAddr.m_iDstTid = pTimer->m_iDstTid;
     cmd.SetAddr(cAddr);
-    fprintf(stdout, "OnTimerOut::PostCmd: type = %d, id = %d\n", cAddr.m_iDstType, cAddr.m_iDstTid);
     CThreadMgrSingleton::GetInstance()->PostCmd(cAddr.m_iDstType, cmd, cAddr.m_iDstTid);
 
     if ((pTimer->m_iPersist == 0) && (m_mapTimer.find(buff) != m_mapTimer.end()))
     {
-        fprintf(stdout, "del no persist event\n");
         evtimer_del(m_mapTimer[buff]->m_pEvent);
         event_free(m_mapTimer[buff]->m_pEvent);
         delete m_mapTimer[buff];
         m_mapTimer.erase(buff);
     }
 
-    fprintf(stdout, "OnTimeOut End\n");
     pthread_mutex_unlock(&m_mutex);
+}
+
+void CTimerThread::NotifyWait()
+{
+    pthread_mutex_lock(&m_mutex);
+    event_base_loopbreak(m_pEventBase); 
+    pthread_mutex_unlock(&m_mutex);
+    CThread::NotifyWait();
 }
 
 void CTimerThread::RealProcessCmd(CCommand &cCmd)
 {
-    fprintf(stdout, "CTimerThread::RealProcessCmd\n");    
     pthread_mutex_lock(&m_mutex);
 
     switch(cCmd.GetCmdType())

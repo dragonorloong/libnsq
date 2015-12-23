@@ -37,7 +37,8 @@ namespace NSQTOOL
 		void RealProcessCmd(CCommand &cCmd);
         static void OnStaticTimeOut(int iHandle, short iEvent, void *pArg);
         void OnTimeOut(int iHandle, short iEvent, void *pArg);
-
+    protected:
+        void NotifyWait();
     private: 
         event_base *m_pEventBase;
         std::map<std::string, STimerInfo *> m_mapTimer;

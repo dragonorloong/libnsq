@@ -87,7 +87,6 @@ namespace NSQTOOL
             std::string strBody = m_strStream.substr(iContentLengthPos + 15, iContentEndPos - iContentLengthPos - 15); 
             int iBodyLength;
             sscanf(strBody.c_str(), "%d", &iBodyLength);
-            fprintf(stdout, "bodyLength = %d\n", iBodyLength);
             int32_t iNeedLength = m_strStream.length() - iHeadEndPos - 4 - iBodyLength;
 
             if (iNeedLength >= 0)

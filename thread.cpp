@@ -53,15 +53,20 @@ namespace NSQTOOL
         
         if (m_lstCmd.size() == 1)
         {
-            pthread_cond_signal(&m_cond);
+            //pthread_cond_signal(&m_cond);
+            NotifyWait();
         }
 
         pthread_mutex_unlock(&m_mutex);
     }
+
+    void CThread::NotifyWait()
+    {
+        pthread_cond_signal(&m_cond);
+    }
     
     void CThread::RealProcessCmd(CCommand &cCmd)
     {
-       // fprintf(stdout, "CThread::ProcessCmd(cmd)\n");
         if (cCmd.GetCmdType() == STOP_TYPE)
         {
             m_lstCmd.clear();	
@@ -137,9 +142,11 @@ namespace NSQTOOL
     void CThread::DestoryHandler(uint64_t iHandlerId)
     {
         pthread_mutex_lock(&m_mutex);
+        NsqLogPrintf(LOG_DEBUG, "CThread::DestoryHandler iHandlerId = %d\n", iHandlerId);
 
         if (m_mapHandler.find(iHandlerId) != m_mapHandler.end())
         {
+            NsqLogPrintf(LOG_DEBUG, "CThread::DestoryHandler Handler found \n");
             delete m_mapHandler[iHandlerId];
             m_mapHandler.erase(iHandlerId);
         }
@@ -212,7 +219,6 @@ namespace NSQTOOL
         
         for (int i = 0; i < iThreadNum; ++i)
         {
-            fprintf(stdout, "snprintf %d, %d\n", iThreadType, i);
             NsqLogPrintf(LOG_DEBUG, "ThreadPool ThreadType = %d, iThreadId = %d\n", iThreadType, i);
             CThread *pThread = CSingletonNsqFactory::GetInstance()->GenThread(iThreadType, i); 
             m_vecThread.push_back(pThread);  

@@ -32,7 +32,7 @@ namespace NSQTOOL
             cHttpRequest.SetRequest(strUrl.c_str(), strAddr.c_str());
             dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
                     &cHttpRequest.Encode(), true);
-            printf("NSQLOOKUP_HANDLER: Connect After SendData = %s\n", cHttpRequest.Encode().c_str());
+            NsqLogPrintf(LOG_DEBUG, "NSQLOOKUP_HANDLER: Connect After SendData = %s\n", cHttpRequest.Encode().c_str());
         }
 
         int CNsqLookupHandler::ProcessRead()

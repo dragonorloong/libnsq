@@ -30,6 +30,7 @@ namespace NSQTOOL
 		void Stop();
 		virtual void RealRun();
         virtual void DestoryHandler(uint64_t iHandleId);
+        virtual void NotifyWait();
 
     protected:
 		virtual void RealProcessCmd(CCommand &cCmd);

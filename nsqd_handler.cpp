@@ -19,10 +19,6 @@ namespace NSQTOOL
             CHandlerContext &cHandlerContext = CMainThread::NsqdConnectCallBack(m_iProtocolId, this);
             cHandlerContext.m_pHandler = this;
 
-            fprintf(stdout, "NSQD_HANDLER OnConnect topic = %s, channel = %s\n", 
-                    cHandlerContext.m_strTopic.c_str(), 
-                    cHandlerContext.m_strChannel.c_str());
-
 	        CNsqdRequest cNsqdRequest;
             cNsqdRequest.Megic();	
 
@@ -36,7 +32,6 @@ namespace NSQTOOL
             dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
                     &cNsqdRequest.Encode(), true);
 
-            fprintf(stdout, "NSQD_HANDLER OnConnect SendData = %s\n", cNsqdRequest.Encode().c_str());
             
         }
 
@@ -59,20 +54,18 @@ namespace NSQTOOL
             {
                 if (pProtocol->GetResponce() ==  "_heartbeat_")
                 {
-                    fprintf(stdout, "_hearbeat_\n");
                     CNsqdRequest cNsqdRequest;
                     cNsqdRequest.Nop();
                     dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
                                                                      &cNsqdRequest.Encode(), true);
                 }
 
-                fprintf(stdout, "response = %s\n", pProtocol->GetResponce().c_str());
             }
             else if (pProtocol->GetFrameType() == CNsqdResponse::FrameTypeMessage)
             {
                 std::string &strMsgId = pProtocol->GetMsgId();
                 std::string &strBody = pProtocol->GetMsgBody();
-                fprintf(stdout, "msg:%s\n", strBody.c_str());
+                //直接返回FIN，可能会丢包
                 CNsqdRequest cNsqdRequest;
                 cNsqdRequest.Finish(strMsgId);
                 dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 

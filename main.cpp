@@ -28,7 +28,7 @@ void NsqLogCallBack(int iLogLevel, const char *pLogMsg)
 
 int main()
 {
-    CMainThread::InitSuperServer(1, 1, LOG_DEBUG, NsqLogCallBack);
+    CMainThread::InitSuperServer(5, 10, LOG_DEBUG, NsqLogCallBack);
     CMainThread::SetConsumer("10.10.159.130", 4161, "Login", "test", ConsumerCallBack);
    // CMainThread::SetProducer("10.10.159.130", 4161, "Login", ConsumerCallBack);
     CMainThread::StartSuperServer();
