@@ -10,10 +10,11 @@
 #include "thread.h"
 #include "event2/event.h"
 #include <string>
+#include "event_thread.h"
 
 namespace NSQTOOL
 {
-    class CTimerThread:public CThread
+    class CTimerThread:public CEventThread
     {
     public:
         struct STimerInfo
@@ -28,19 +29,16 @@ namespace NSQTOOL
         };
 
         CTimerThread(int32_t iThreadType, int32_t iThreadId);
+
         ~CTimerThread()
         {
             pthread_mutex_destroy(&m_mutex);
         }
 
-		void RealRun();
 		void RealProcessCmd(CCommand &cCmd);
         static void OnStaticTimeOut(int iHandle, short iEvent, void *pArg);
         void OnTimeOut(int iHandle, short iEvent, void *pArg);
-    protected:
-        void NotifyWait();
     private: 
-        event_base *m_pEventBase;
         std::map<std::string, STimerInfo *> m_mapTimer;
         pthread_mutex_t m_mutex;
     };

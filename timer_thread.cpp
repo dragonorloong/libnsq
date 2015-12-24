@@ -11,25 +11,9 @@ namespace NSQTOOL
 {
 
 CTimerThread::CTimerThread(int32_t iThreadType, int32_t iThreadId)
-    : CThread(iThreadType, iThreadId)
+    : CEventThread(iThreadType, iThreadId)
 {
     pthread_mutex_init(&m_mutex, NULL);
-    m_pEventBase = event_base_new();			
-}
-
-    
-void CTimerThread::RealRun()
-{ 
-    while (!m_bStop)	
-    {
-        CThread::ProcessCmd();
-
-        struct timeval sTm; 
-        sTm.tv_sec =0;
-        sTm.tv_usec = 1000;
-        event_base_loopexit(m_pEventBase, &sTm);	
-        event_base_dispatch(m_pEventBase);
-    }
 }
 
 void CTimerThread::OnStaticTimeOut(int iHandle, short iEvent, void *pArg)
@@ -62,14 +46,6 @@ void CTimerThread::OnTimeOut(int iHandle, short iEvent, void *pArg)
     }
 
     pthread_mutex_unlock(&m_mutex);
-}
-
-void CTimerThread::NotifyWait()
-{
-    pthread_mutex_lock(&m_mutex);
-    event_base_loopbreak(m_pEventBase); 
-    pthread_mutex_unlock(&m_mutex);
-    CThread::NotifyWait();
 }
 
 void CTimerThread::RealProcessCmd(CCommand &cCmd)

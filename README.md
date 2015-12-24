@@ -9,4 +9,5 @@
 #
   记得安装libtool和automake，编译通不过一般是三方库没有安装好的原因
 #
-  嗯，我决定给启动函数取个很嚣张的名字，就叫了StartUniverseInvincibleSuperServer
+  嗯，我决定给启动函数取个很嚣张的名字，就叫StartUniverseInvincibleSuperServer了
+

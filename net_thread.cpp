@@ -8,9 +8,9 @@
 namespace NSQTOOL
 {
     CNetThread::CNetThread(int32_t iThreadType, int32_t iThreadId)
-        :CThread(iThreadType, iThreadId)
+        :CEventThread(iThreadType, iThreadId)
     {
-        m_pEventBase = event_base_new();			
+
     }
 
     void CNetThread::OnStaticRead(struct bufferevent *pBufevt, void *arg)
@@ -99,13 +99,6 @@ namespace NSQTOOL
         return iRet;
     }
 
-    void CNetThread::NotifyWait()
-    {
-        pthread_mutex_lock(&m_mutex);
-        event_base_loopbreak(m_pEventBase); 
-        pthread_mutex_unlock(&m_mutex);
-        CThread::NotifyWait();
-    }
 
     void CNetThread::RealProcessCmd(CCommand &cCmd)
     {
@@ -190,42 +183,13 @@ namespace NSQTOOL
         pthread_mutex_unlock(&m_mutex);
     }	
 
-    void CNetThread::RealRun()
-    {
-        while (!m_bStop)	
-        {
-            CThread::ProcessCmd();
-
-            struct timeval sTm; 
-            sTm.tv_sec =0;
-            sTm.tv_usec = 1000;
-            event_base_loopexit(m_pEventBase, &sTm);	
-            event_base_dispatch(m_pEventBase);
-        }
-    }
-
-
     //////////////////////////////////////////////////////////
     //                CListenThread
     /////////////////////////////////////////////////////////
-    CListenThread::CListenThread(int32_t iThreadType, int32_t iThreadId):
-        CThread(iThreadType, iThreadId)
+    CListenThread::CListenThread(int32_t iThreadType, int32_t iThreadId)
+        :CEventThread(iThreadType, iThreadId)
     {
-        m_pEventBase = event_base_new();			
-    }
 
-    void CListenThread::RealRun()
-    {
-        while (!m_bStop)	
-        {
-            ProcessCmd();
-
-            struct timeval sTm; 
-            sTm.tv_sec =0;
-            sTm.tv_usec = 1000;
-            event_base_loopexit(m_pEventBase, &sTm);	
-            event_base_dispatch(m_pEventBase);
-        }
     }
 
     void CListenThread::OnStaticRead(struct evconnlistener *pListener, evutil_socket_t iAcceptHandle, 
@@ -260,14 +224,6 @@ namespace NSQTOOL
         pthread_mutex_unlock(&m_mutex); 
     }
     
-    void CListenThread::NotifyWait()
-    {
-        pthread_mutex_lock(&m_mutex);
-        event_base_loopbreak(m_pEventBase); 
-        pthread_mutex_unlock(&m_mutex);
-        CThread::NotifyWait();
-    }
-
     void CListenThread::RealProcessCmd(CCommand &cCmd)
     {
         pthread_mutex_lock(&m_mutex); 

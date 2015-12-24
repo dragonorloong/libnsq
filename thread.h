@@ -18,7 +18,7 @@ namespace NSQTOOL
 	{
 	public:
 		CThread(int32_t iThreadType, int32_t iThreadId);
-		~CThread();
+		virtual ~CThread();
 
 		int32_t GetThreadId();
 		int32_t GetThreadType();

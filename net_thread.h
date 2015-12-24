@@ -1,6 +1,6 @@
 #ifndef _NET_THREAD_H_
 #define _NET_THREAD_H_
-#include "thread.h"
+#include "event_thread.h"
 #include "event2/event.h"
 #include "event2/bufferevent.h"
 #include "event2/buffer.h"
@@ -21,7 +21,7 @@ namespace NSQTOOL
     class CTcpHandler;
     class CListenHandler;
 
-	class CNetThread:public CThread
+	class CNetThread:public CEventThread
 	{
 	public:
 		struct SNetContext
@@ -34,29 +34,23 @@ namespace NSQTOOL
             CListenHandler *m_pListenHandler;
 		};
 
-		CNetThread(int32_t iThreadType, int32_t iThreadId);
-
-        ~CNetThread() {}
+        CNetThread(int32_t iThreadType, int iThreadId);
 
 		static void OnStaticRead(struct bufferevent *pBufevt, void *arg);
 		static void OnStaticError(struct bufferevent *pBufevt, 
                                 short iTemp, void *arg);
-		void RealRun();
         void DestoryHandler(uint64_t iHandlerId);
         int SendData(struct bufferevent *pBufevt, 
                     const std::string *pString, 
                     bool bIsCopy = false);
     protected:
 		void RealProcessCmd(CCommand &cCmd);
-        void NotifyWait();
     private:
 		void OnRead(struct bufferevent *pBufevt, void *arg);
 		void OnError(struct bufferevent *pBufevt, short iTemp, void *arg);
-	private:
-		event_base *m_pEventBase;
 	};
 
-	class CListenThread:public CThread
+	class CListenThread:public CEventThread
 	{
 	public:
 		struct SListenInfo
@@ -69,9 +63,7 @@ namespace NSQTOOL
             CListenHandler *m_pListenHandler;
 		};
 
-
-		CListenThread(int32_t iThreadType, int32_t iThreadId);
-		void RealRun();
+        CListenThread(int32_t iThreadType, int iThreadId);
 		static void OnStaticRead(struct evconnlistener *pListener, 
                             evutil_socket_t iAcceptHandle, 
                             struct sockaddr *pAddr, int socklen, void *pArg);		
@@ -79,11 +71,6 @@ namespace NSQTOOL
         void DestoryHandler(uint64_t iHandlerId);
 		void OnRead(struct evconnlistener *pListener, evutil_socket_t iAcceptHandle, 
                             struct sockaddr *pAddr, int socklen, void *pArg);		
-
-    protected:
-        void NotifyWait();
-	private:
-		event_base *m_pEventBase;
 	};
 };
 #endif
