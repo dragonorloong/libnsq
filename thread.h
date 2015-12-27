@@ -23,9 +23,9 @@ namespace NSQTOOL
 		int32_t GetThreadId();
 		int32_t GetThreadType();
 		//同步消息
-		void SendCmd(CCommand &cCmd);
+		void SendCmd(CCommand *pCmd);
 		//异步消息
-		void PostCmd(CCommand &cCmd);
+		void PostCmd(CCommand *pCmd);
 		void Run();
 		void Stop();
 		virtual void RealRun();
@@ -33,7 +33,7 @@ namespace NSQTOOL
         virtual void NotifyWait();
 
     protected:
-		virtual void RealProcessCmd(CCommand &cCmd);
+		virtual void RealProcessCmd(CCommand *pCmd);
 		int32_t ProcessCmd();
         uint64_t GetHandlerId();
 
@@ -41,7 +41,7 @@ namespace NSQTOOL
 		static void *ThreadFunc(void *pArgs);
 
 	protected:
-		list<CCommand> m_lstCmd;				
+		list<CCommand *> m_lstCmd;				
         map<uint64_t, CHandler *> m_mapHandler;
 		pthread_mutex_t m_mutex;	
 		pthread_mutex_t m_mutexSync; //同步	
@@ -61,8 +61,8 @@ namespace NSQTOOL
         CThreadPool(int iThreadType, int iThreadNum);
         ~CThreadPool();
 		void Run();
-		void SendCmd(CCommand &cCmd, int32_t iThreadNum = -1);
-		void PostCmd(CCommand &cCmd, int32_t iThreadNum = -1);
+		void SendCmd(CCommand *pCmd);
+		void PostCmd(CCommand *pCmd);
 		void Stop();
 		int32_t GetThreadType();
 
@@ -80,8 +80,8 @@ namespace NSQTOOL
 		CThreadMgr() { }
 	public:
 		void RegisterThreadPool(CThreadPool *pThreadPool);
-		void SendCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum = -1); 
-		void PostCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum = -1); 
+		void SendCmd(CCommand *pCmd); 
+		void PostCmd(CCommand *pCmd); 
 		void Stop();
         void Run();
 	private:

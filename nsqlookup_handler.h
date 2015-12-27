@@ -11,10 +11,14 @@ namespace NSQTOOL
     class CNsqLookupHandler:public CTcpHandler
     {
     public: 
-        CNsqLookupHandler(int iProtocolType, int iProtocolId,
+        CNsqLookupHandler(int iCmdType, int iCmdId,
                 uint64_t iHandleId, CThread *pThread);
         virtual void OnConnect();
         virtual int ProcessRead();
+        void ProcessCmd(CCommand *pCmd);
+    private:
+        string m_strTopic;
+        string m_strChannel;
     };
 };
 #endif

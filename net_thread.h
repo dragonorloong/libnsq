@@ -24,52 +24,18 @@ namespace NSQTOOL
 	class CNetThread:public CEventThread
 	{
 	public:
-		struct SNetContext
-		{
-            int m_iProtocolType;
-            int m_iProtocolId;
-            int m_iFd;
-            string m_strHost;
-            uint16_t m_iPort;
-            CListenHandler *m_pListenHandler;
-		};
-
-        CNetThread(int32_t iThreadType, int iThreadId);
-
+	    CNetThread(int32_t iThreadType, int iThreadId);
 		static void OnStaticRead(struct bufferevent *pBufevt, void *arg);
 		static void OnStaticError(struct bufferevent *pBufevt, 
                                 short iTemp, void *arg);
-        void DestoryHandler(uint64_t iHandlerId);
-        int SendData(struct bufferevent *pBufevt, 
-                    const std::string *pString, 
-                    bool bIsCopy = false);
-    protected:
-		void RealProcessCmd(CCommand &cCmd);
-    private:
-		void OnRead(struct bufferevent *pBufevt, void *arg);
-		void OnError(struct bufferevent *pBufevt, short iTemp, void *arg);
 	};
 
 	class CListenThread:public CEventThread
 	{
 	public:
-		struct SListenInfo
-		{
-            string m_strHost;
-            uint16_t m_iPort;
-			int m_iProtocolType;	
-            int m_iProtocolId;
-			evconnlistener *m_pListener;
-            CListenHandler *m_pListenHandler;
-		};
-
-        CListenThread(int32_t iThreadType, int iThreadId);
+		CListenThread(int32_t iThreadType, int iThreadId);
 		static void OnStaticRead(struct evconnlistener *pListener, 
                             evutil_socket_t iAcceptHandle, 
-                            struct sockaddr *pAddr, int socklen, void *pArg);		
-		void RealProcessCmd(CCommand &cCmd);
-        void DestoryHandler(uint64_t iHandlerId);
-		void OnRead(struct evconnlistener *pListener, evutil_socket_t iAcceptHandle, 
                             struct sockaddr *pAddr, int socklen, void *pArg);		
 	};
 };

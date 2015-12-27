@@ -17,29 +17,21 @@ namespace NSQTOOL
     class CTimerThread:public CEventThread
     {
     public:
-        struct STimerInfo
-        {
-            event *m_pEvent;
-            int32_t m_iDstType;
-            int32_t m_iDstTid;
-            int32_t m_iCmdType; //每一个线程都可以有多个定时器 
-            int32_t m_iPersist; //1代表持续事件，0代表一次性定时器
-            struct timeval m_cTimeval;
-            CTimerThread *m_pThis;
-        };
-
         CTimerThread(int32_t iThreadType, int32_t iThreadId);
+        void TimerAdd(CCommand *pCmd);
+ //       void TimerDel(CCommand *pCmd);
+//        void KeepAlive(CCommand *pCmd);
 
         ~CTimerThread()
         {
             pthread_mutex_destroy(&m_mutex);
         }
 
-		void RealProcessCmd(CCommand &cCmd);
+		void RealProcessCmd(CCommand *pCmd);
         static void OnStaticTimeOut(int iHandle, short iEvent, void *pArg);
         void OnTimeOut(int iHandle, short iEvent, void *pArg);
     private: 
-        std::map<std::string, STimerInfo *> m_mapTimer;
+        std::map<std::string, CTimerAddCommand *> m_mapTimer;
         pthread_mutex_t m_mutex;
     };
 }

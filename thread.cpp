@@ -38,18 +38,18 @@ namespace NSQTOOL
     }
 
     //同步消息
-    void CThread::SendCmd(CCommand &cCmd)
+    void CThread::SendCmd(CCommand *pCmd)
     {
         pthread_mutex_lock(&m_mutexSync);
-        RealProcessCmd(cCmd);
+        RealProcessCmd(pCmd);
         pthread_mutex_unlock(&m_mutexSync);
     }
     
     //异步消息
-    void CThread::PostCmd(CCommand &cCmd)
+    void CThread::PostCmd(CCommand *pCmd)
     {
         pthread_mutex_lock(&m_mutex);
-        m_lstCmd.push_back(cCmd);
+        m_lstCmd.push_back(pCmd);
         
         if (m_lstCmd.size() == 1)
         {
@@ -65,22 +65,33 @@ namespace NSQTOOL
         pthread_cond_signal(&m_cond);
     }
     
-    void CThread::RealProcessCmd(CCommand &cCmd)
+    void CThread::RealProcessCmd(CCommand *pCmd)
     {
-        if (cCmd.GetCmdType() == STOP_TYPE)
+        if (pCmd->GetCmdType() == STOP_TYPE)
         {
             m_lstCmd.clear();	
             m_bStop = true;
         }
         else
         {
-           if (m_mapHandler.find(cCmd.GetAddr().m_iDstHandlerId) != m_mapHandler.end())
+           if (m_mapHandler.find(pCmd->GetAddr().m_cDstAddr.m_iHandlerId) != m_mapHandler.end())
            {
-                m_mapHandler[cCmd.GetAddr().m_iDstHandlerId]->ProcessCmd(cCmd);         
+                m_mapHandler[pCmd->GetAddr().m_cDstAddr.m_iHandlerId]->ProcessCmd(pCmd);         
            }
            else
            {
-                NsqLogPrintf(LOG_DEBUG, "no found this handler handler id = ", cCmd.GetAddr().m_iDstHandlerId);
+                CHandler *pHandler = CSingletonNsqFactory::GetInstance()->GenHandler(pCmd->GetCmdType(),
+                                    pCmd->GetCmdId(), 
+                                    GetHandlerId(), this);
+                
+                if (pHandler == NULL)
+                {
+                    NsqLogPrintf(LOG_DEBUG, "no found this handler handler id = ", pCmd->GetAddr().m_cDstAddr.m_iHandlerId);
+                    delete pCmd; 
+                }
+
+                m_mapHandler[pHandler->GetHandlerId()] = pHandler;
+                pHandler->ProcessCmd(pCmd);
            }
         }
     }
@@ -99,12 +110,12 @@ namespace NSQTOOL
                 return iRet;
             }
             
-            CCommand cCmd = *m_lstCmd.begin();
+            CCommand *pCmd = *m_lstCmd.begin();
             m_lstCmd.erase(m_lstCmd.begin());
             pthread_mutex_unlock(&m_mutex);
             
             pthread_mutex_lock(&m_mutexSync);
-            RealProcessCmd(cCmd);
+            RealProcessCmd(pCmd);
             pthread_mutex_unlock(&m_mutexSync);
             
             iRet ++;
@@ -173,19 +184,19 @@ namespace NSQTOOL
         m_mapThreadPool[pThreadPool->GetThreadType()] = pThreadPool;
     }
 
-    void CThreadMgr::SendCmd(int32_t iThreadType, CCommand &cCmd,int32_t iThreadNum) 
+    void CThreadMgr::SendCmd(CCommand *pCmd) 
     {
-        if (m_mapThreadPool.find(iThreadType) != m_mapThreadPool.end())
+        if (m_mapThreadPool.find(pCmd->GetAddr().m_cDstAddr.m_iThreadType) != m_mapThreadPool.end())
         {
-            m_mapThreadPool[iThreadType]->SendCmd(cCmd, iThreadNum);
+            m_mapThreadPool[pCmd->GetAddr().m_cDstAddr.m_iThreadType]->SendCmd(pCmd);
         }
     }
 
-    void CThreadMgr::PostCmd(int32_t iThreadType, CCommand &cCmd, int32_t iThreadNum) 
+    void CThreadMgr::PostCmd(CCommand *pCmd) 
     {
-        if (m_mapThreadPool.find(iThreadType) != m_mapThreadPool.end())
+        if (m_mapThreadPool.find(pCmd->GetAddr().m_cDstAddr.m_iThreadType) != m_mapThreadPool.end())
         {
-            m_mapThreadPool[iThreadType]->PostCmd(cCmd, iThreadNum);
+            m_mapThreadPool[pCmd->GetAddr().m_cDstAddr.m_iThreadType]->PostCmd(pCmd);
         }
     }
 
@@ -243,24 +254,28 @@ namespace NSQTOOL
         }
     }
 
-    void CThreadPool::SendCmd(CCommand &cCmd, int32_t iThreadNum)
+    void CThreadPool::SendCmd(CCommand *pCmd)
     {
-        if (iThreadNum == -1)
+        int iThreadNum = pCmd->GetAddr().m_cDstAddr.m_iThreadId;
+
+        if (pCmd->GetAddr().m_cDstAddr.m_iThreadId == -1)
         {
             iThreadNum = (m_iCurrentNum++) % m_iTotalThreadNum;	
         }
 
-        m_vecThread[iThreadNum]->SendCmd(cCmd);
+        m_vecThread[iThreadNum]->SendCmd(pCmd);
     }
 
-    void CThreadPool::PostCmd(CCommand &cCmd, int32_t iThreadNum)
+    void CThreadPool::PostCmd(CCommand *pCmd)
     {
+        int iThreadNum = pCmd->GetAddr().m_cDstAddr.m_iThreadId;
+
         if (iThreadNum == -1)
         {
             iThreadNum = (m_iCurrentNum++) % m_iTotalThreadNum;	
         }
 
-        m_vecThread[iThreadNum]->PostCmd(cCmd);
+        m_vecThread[iThreadNum]->PostCmd(pCmd);
     }
 
     void CThreadPool::Stop()

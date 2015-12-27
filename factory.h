@@ -11,8 +11,8 @@ namespace NSQTOOL
     {
     public:
         virtual CThread *GenThread(int iThreadType, int iThreadId) = 0;
-        virtual CProtocol *GenProtocol(int iProtocolType) = 0;
-        virtual CHandler *GenHandler(int iProtocolType, int iProtocolId, 
+        virtual CProtocol *GenProtocol(int iCmdType, int iCmdId) = 0;
+        virtual CHandler *GenHandler(int iCmdType, int iCmdId, 
                 int iHandlerId, CThread *pThread)=0;
     };
 
@@ -28,8 +28,8 @@ namespace NSQTOOL
 
     public:
         CThread *GenThread(int iThreadType, int iThreadId);
-        CProtocol *GenProtocol(int iProtocolType);
-        CHandler *GenHandler(int iProtocolType, int iProtocolId, int iHandlerId, CThread *pThread);
+        CProtocol *GenProtocol(int iCmdType, int iCmdId);
+        CHandler *GenHandler(int iCmdType, int iCmdId, int iHandlerId, CThread *pThread);
     };
 
     typedef CSingleton<CNsqFactory> CSingletonNsqFactory;

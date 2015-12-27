@@ -5,33 +5,31 @@
 #include "nsqlookup_handler.h"
 #include "main_thread.h"
 #include "nsqlookup_protocol.h"
+#include <algorithm>
 
 namespace NSQTOOL
 {
-        CNsqLookupHandler::CNsqLookupHandler(int iProtocolType, int iProtocolId,
+        CNsqLookupHandler::CNsqLookupHandler(int iCmdType, int iCmdId,
                 uint64_t iHandleId, CThread *pThread)
-                : CTcpHandler(iProtocolType, iProtocolId, iHandleId, pThread)
+                : CTcpHandler(iCmdType, iCmdId, iHandleId, pThread)
         {
         }
 
         void CNsqLookupHandler::OnConnect()
         {
-            CNsqLookupContext cLookup = CMainThread::LookupConnectCallBack(m_iProtocolId);
-
             string strUrl = "/lookup?topic=";
-            strUrl += cLookup.m_strTopic;
+            strUrl += m_strTopic;
 
             char buff[10] = {0};
-            snprintf(buff, sizeof(buff), "%u", cLookup.m_iLookupPort);
+            snprintf(buff, sizeof(buff), "%u", m_iPort);
 
-            string strAddr = cLookup.m_strLookupHost;
+            string strAddr = m_strHost;
             strAddr += ":";
             strAddr += buff;
 
             CHttpRequest cHttpRequest;
             cHttpRequest.SetRequest(strUrl.c_str(), strAddr.c_str());
-            dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
-                    &cHttpRequest.Encode(), true);
+            SendData(cHttpRequest.Encode().c_str(), cHttpRequest.Encode().length());
             NsqLogPrintf(LOG_DEBUG, "NSQLOOKUP_HANDLER: Connect After SendData = %s\n", cHttpRequest.Encode().c_str());
         }
 
@@ -39,12 +37,36 @@ namespace NSQTOOL
         {
             CNsqLookupResponse *pProtocol = dynamic_cast<CNsqLookupResponse *>(m_pProtocol);
 
-            CMainThread::LookupReadCallBack(m_iProtocolId, 
-                                               pProtocol->GetChannels(), 
-                                               pProtocol->GetProducers());
+            if (find(pProtocol->GetChannels().begin(), pProtocol->GetChannels().end(), m_strChannel) == pProtocol->GetChannels().end() && !m_strChannel.empty())
+            {
+                //消费者没有对应的channel，直接返回    
+                GetThread()->DestoryHandler(GetHandlerId());
+                return -1;
+            }
+
+
+            CMainThread::LookupReadCallBack(m_strTopic, m_strChannel,
+                                            pProtocol->GetChannels(), 
+                                            pProtocol->GetProducers());
 
             GetThread()->DestoryHandler(GetHandlerId());
             //DestoryHandler以后，就不能再调用对象的任何信息了，已经析构了自己
             return -1; 
+        }
+
+        void CNsqLookupHandler::ProcessCmd(CCommand *pCmd)
+        {
+            switch(pCmd->GetCmdType()) 
+            {
+                case TCP_CONNECT_TYPE:
+                {
+                    CNsqLookupCommand *pLookupCommand = dynamic_cast<CNsqLookupCommand *>(pCmd);  
+                    m_strTopic = pLookupCommand->m_strTopic;
+                    m_strChannel = pLookupCommand->m_strChannel;
+                }
+                break;
+            }
+
+            CTcpHandler::ProcessCmd(pCmd);
         }
 };

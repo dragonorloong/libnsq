@@ -20,30 +20,28 @@ namespace NSQTOOL
     void CMainThread::OnTimeOut()
     {
         CGuard<CLock> cGuard(&m_cLock);
-        map<int, CNsqLookupContext>::iterator iter = 
+        map<string, CNsqLookupContext>::iterator iter = 
             m_mapLookupContext.begin();
 
         for (; iter != m_mapLookupContext.end(); ++iter)
         {
-            CCommand cmd(NET_CONNECT_TYPE);
-            CNetThread::SNetContext *pNetContext = new CNetThread::SNetContext;
-            pNetContext->m_strHost = iter->second.m_strLookupHost;
-            pNetContext->m_iPort = iter->second.m_iLookupPort;
-            pNetContext->m_iProtocolType = NSQLOOKUP_TYPE;
-            pNetContext->m_iProtocolId = iter->first;
-            cmd.SetLData(pNetContext);
-            CCommand::CCmdAddr cCmdAddr;
-            cCmdAddr.m_iDstTid = -1;
-            cCmdAddr.m_iDstType = NET_THREAD_TYPE;
-            cmd.SetAddr(cCmdAddr);
-            CThreadMgrSingleton::GetInstance()->PostCmd(NET_THREAD_TYPE, cmd);
+            CNsqLookupCommand *pCmd = new CNsqLookupCommand(
+                    iter->second.m_strTopic,
+                    iter->second.m_strChannel,
+                    iter->second.m_strLookupHost, 
+                    iter->second.m_iLookupPort);
+
+            CCmdAddr cCmdAddr;
+            cCmdAddr.m_cDstAddr.m_iThreadType = NET_THREAD_TYPE;
+            pCmd->SetAddr(cCmdAddr);
+            CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
         }
     }
 
     //持续发现
-    void CMainThread::RealProcessCmd(CCommand &cCmd)
+    void CMainThread::RealProcessCmd(CCommand *pCmd)
     {
-       switch(cCmd.GetCmdType()) 
+       switch(pCmd->GetCmdType()) 
        {
            case LOOKUP_TIMER:
            {
@@ -52,17 +50,15 @@ namespace NSQTOOL
            }
            default:
            {
-                CThread::RealProcessCmd(cCmd);
+                CThread::RealProcessCmd(pCmd);
                 break;
            }
        }
     }
 
     map<string, vector<CHandlerContext> > CMainThread::m_mapTopic2Handler;
-    map<int, string> CMainThread::m_mapHandler2Topic;
-    map<int, CNsqLookupContext>  CMainThread::m_mapLookupContext;
+    map<string, CNsqLookupContext>  CMainThread::m_mapLookupContext;
     int CMainThread::m_iConnectNum = 2;
-    int CMainThread::m_iProtocolId = 0;
     CLock CMainThread::m_cLock;
     LOGCALLBACK CMainThread::m_pLogFunc = NULL;
     int CMainThread::m_iLogLevel = LOG_DEBUG;
@@ -96,7 +92,7 @@ namespace NSQTOOL
         cLookup.m_strTopic = strTopic;
         cLookup.m_funcCallBack = pFunc;
 
-        m_mapLookupContext[++m_iProtocolId] = cLookup;
+        m_mapLookupContext[strTopic] = cLookup;
     }
 
     void CMainThread::SetConsumer(const string &strLookupHost, 
@@ -114,7 +110,7 @@ namespace NSQTOOL
         cLookup.m_strChannel = strChannel;
         cLookup.m_funcCallBack = pFunc;
 
-        m_mapLookupContext[++m_iProtocolId] = cLookup;
+        m_mapLookupContext[strTopic + "_" + strChannel] = cLookup;
     }
 
     void CMainThread::InitSuperServer(int iThreadNum, 
@@ -128,7 +124,6 @@ namespace NSQTOOL
         m_iLogLevel = iLogLevel;
         m_pLogFunc = pLogFunc;
         srand(::time(NULL));
-        m_iProtocolId = 0;
     }
 
     void CMainThread::StartSuperServer()
@@ -144,32 +139,17 @@ namespace NSQTOOL
 
         CThreadMgrSingleton::GetInstance()->Run();
 
-        CTimerThread::STimerInfo *pTimerInfo = new CTimerThread::STimerInfo();
-
         struct timeval cTimeval = {15, 0};
-        pTimerInfo->m_cTimeval = cTimeval;
 
-        pTimerInfo->m_iDstTid = 0;
-        pTimerInfo->m_iDstType = MAIN_THREAD_TYPE;
-        pTimerInfo->m_iPersist = 1; 
-        pTimerInfo->m_iCmdType = LOOKUP_TIMER;
+        CTimerAddCommand *pCmd = new CTimerAddCommand(cTimeval, 1, LOOKUP_TIMER);
+        CCmdAddr cCmdAddr;
+        cCmdAddr.m_cSrcAddr.m_iThreadType = MAIN_THREAD_TYPE;
+        cCmdAddr.m_cSrcAddr.m_iThreadId = 0;
+        cCmdAddr.m_cDstAddr.m_iThreadType = TIMER_THREAD_TYPE;
+        pCmd->SetAddr(cCmdAddr);
 
-        CCommand::CCmdAddr cCmdAddr;
-        cCmdAddr.m_iDstTid = -1;
-        cCmdAddr.m_iDstType = TIMER_THREAD_TYPE;
-
-        CCommand cmd(TIMER_ADD_TYPE);
-        cmd.SetAddr(cCmdAddr);
-        cmd.SetLData(pTimerInfo);
-
-        CThreadMgrSingleton::GetInstance()->PostCmd(TIMER_THREAD_TYPE, cmd);
+        CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
         OnTimeOut();
-    }
-
-    CNsqLookupContext &CMainThread::LookupConnectCallBack(int iProtocolId)
-    {
-        CGuard<CLock> cGuard(&m_cLock);
-        return m_mapLookupContext[iProtocolId];
     }
 
     void CMainThread::NewNsqdConnect(const string &strTopic, const string &strChannel, 
@@ -190,87 +170,62 @@ namespace NSQTOOL
 
         while ((m_iConnectNum - iConnectNum) > 0)
         {
-            CCommand cmd(NET_CONNECT_TYPE);
-            CNetThread::SNetContext *pNetContext = new CNetThread::SNetContext;
-            pNetContext->m_strHost = strHost;
-            pNetContext->m_iPort = iPort;
-            pNetContext->m_iProtocolType = NSQD_TYPE;
-            pNetContext->m_iProtocolId = ++m_iProtocolId;
-            cmd.SetLData(pNetContext);
-            CCommand::CCmdAddr cCmdAddr;
-            cCmdAddr.m_iDstTid = -1;
-            cCmdAddr.m_iDstType = NET_THREAD_TYPE;
-            cmd.SetAddr(cCmdAddr);
-            CThreadMgrSingleton::GetInstance()->PostCmd(NET_THREAD_TYPE, cmd);           
-            m_mapHandler2Topic[m_iProtocolId] = strTopic + "_" + strChannel;
-           
-            CHandlerContext cHandlerContext;
-            cHandlerContext.m_iProtocolId = m_iProtocolId;
-            cHandlerContext.m_strNsqdHost = strHost;
-            cHandlerContext.m_iNsqdPort = iPort;
-            cHandlerContext.m_pHandler = NULL;
-            cHandlerContext.m_strTopic = strTopic;
-            cHandlerContext.m_strChannel = strChannel;
-            m_mapTopic2Handler[strTopic+"_"+strChannel].push_back(cHandlerContext);
-            iConnectNum ++;
+            CNsqdCommand *pCmd = new CNsqdCommand(
+                   strTopic, strChannel, strHost, iPort); 
+            CCmdAddr cCmdAddr;
+            cCmdAddr.m_cDstAddr.m_iThreadType = NET_THREAD_TYPE;
+            pCmd->SetAddr(cCmdAddr);
+            CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
         }
     }
 
-    void CMainThread::LookupReadCallBack(int iProtocolId, const vector<string> &vecChannels, 
-                        const vector<CNsqLookupResponse::SProducers> &vecProducers)
+    void CMainThread::LookupReadCallBack(const string &strTopic, const string &strChannel,
+                        const vector<string> &vecChannels, const vector<CNsqLookupResponse::SProducers> &vecProducers)
     {
         CGuard<CLock> cGuard(&m_cLock);
-
-        if (find(vecChannels.begin(), vecChannels.end(), 
-             m_mapLookupContext[iProtocolId].m_strChannel) == vecChannels.end() &&
-            !m_mapLookupContext[iProtocolId].m_strChannel.empty())
-        {
-            //消费者没有对应的channel，直接返回    
-            return;
-        }
 
         vector<CNsqLookupResponse::SProducers>::const_iterator iter = 
             vecProducers.begin();
 
         for (; iter != vecProducers.end(); ++ iter)
         {
-            NewNsqdConnect(m_mapLookupContext[iProtocolId].m_strTopic,
-                        m_mapLookupContext[iProtocolId].m_strChannel, 
+            NewNsqdConnect(strTopic, strChannel, 
                         iter->m_strBroadcastAddres, iter->m_iTcpPort);    
         }
 
     }
 
-    CHandlerContext &CMainThread::NsqdConnectCallBack(int iProtocolId, CTcpHandler *pHandler)
+    void CMainThread::NsqdConnectCallBack(
+            CAddr &cAddr, const string &strNsqdHost
+            , const uint16_t iPort, const string &strTopic
+            , const string &strChannel)
+
     {
         CGuard<CLock> cGuard(&m_cLock);
-        string strKey = m_mapHandler2Topic[iProtocolId];
-
-        vector<CHandlerContext> &vecHandlerContext = m_mapTopic2Handler[strKey];
-        vector<CHandlerContext>::iterator iter = vecHandlerContext.begin();
-
-        for (; iter != vecHandlerContext.end(); ++iter)
-        {
-            if (iter->m_iProtocolId == iProtocolId)
-            {
-                iter->m_pHandler = pHandler;
-                return *iter;
-            }    
-        }
+        CHandlerContext cHandlerContext;
+        cHandlerContext.m_cAddr = cAddr;
+        cHandlerContext.m_strNsqdHost = strNsqdHost;
+        cHandlerContext.m_iNsqdPort = iPort;
+        cHandlerContext.m_strTopic = strTopic;
+        cHandlerContext.m_strChannel = strChannel;
+        m_mapTopic2Handler[strTopic + "_" + strChannel].push_back(cHandlerContext);
     }
 
-    void CMainThread::NsqdErrorCallBack(int iProtocolId)
+    void CMainThread::NsqdErrorCallBack(CAddr &cAddr
+            , const string &strTopic
+            , const string &strChannel)
     {
         CGuard<CLock> cGuard(&m_cLock);
 
-        string strKey = m_mapHandler2Topic[iProtocolId];
-
+        string strKey = strTopic + "_" + strChannel;
         vector<CHandlerContext> &vecHandlerContext = m_mapTopic2Handler[strKey];
         vector<CHandlerContext>::iterator iter = vecHandlerContext.begin();
 
         for (; iter != vecHandlerContext.end(); ++iter)
         {
-            if (iter->m_iProtocolId == iProtocolId)
+            if (iter->m_cAddr.m_iThreadType == cAddr.m_iThreadType && 
+                iter->m_cAddr.m_iThreadId == cAddr.m_iThreadId &&
+                iter->m_cAddr.m_iHandlerId == cAddr.m_iHandlerId )
             {
                 vecHandlerContext.erase(iter); 
                 break; 
@@ -278,20 +233,17 @@ namespace NSQTOOL
         }
     }
 
-    void CMainThread::NsqdReadCallBack(int iProtocolId, 
+    void CMainThread::NsqdReadCallBack(const string &strTopic, 
+                                       const string &strChannel,
                                        const string &strMsgId, 
                                        const string &strMsgBody)
     {
         CGuard<CLock> cGuard(&m_cLock);
-        map<int, CNsqLookupContext>::iterator iter = m_mapLookupContext.begin();
+        map<string, CNsqLookupContext>::iterator iter = m_mapLookupContext.begin();
 
-        for (; iter != m_mapLookupContext.end(); ++iter)
+        if (m_mapLookupContext.find(strTopic + "_" + strChannel) != m_mapLookupContext.end())
         {
-            if ((iter->second.m_strTopic + "_" + iter->second.m_strChannel) == 
-              m_mapHandler2Topic[iProtocolId])    
-            {
-               iter->second.m_funcCallBack(iProtocolId, strMsgId, strMsgBody); 
-            }
+            m_mapLookupContext[strTopic + "_" + strChannel].m_funcCallBack(-1, strMsgId, strMsgBody);
         }
     }
 
@@ -305,12 +257,16 @@ namespace NSQTOOL
         }
 
         int iIndex = rand() % m_mapTopic2Handler[strTopic + "_"].size();
-        CTcpHandler *pHandler = m_mapTopic2Handler[strTopic + "_"][iIndex].m_pHandler;  
+        CAddr cAddr = m_mapTopic2Handler[strTopic + "_"][iIndex].m_cAddr;  
         
         //这里应该用异步消息的模式，后续改掉
         CNsqdRequest cNsqdRequest;
         cNsqdRequest.PubLish(strTopic, strMsg, strMsg.length());
-        dynamic_cast<CNetThread *>(pHandler->GetThread())->SendData(pHandler->GetBufferevent(), &cNsqdRequest.Encode(), true);
+        char *pData = new char[cNsqdRequest.Encode().length()];
+        memcpy(pData, cNsqdRequest.Encode().c_str(), cNsqdRequest.Encode().length());
+        CTcpSendCommand *pCommand = new CTcpSendCommand(pData, cNsqdRequest.Encode().length());
+        pCommand->GetAddr().m_cDstAddr = cAddr;
+        CThreadMgrSingleton::GetInstance()->PostCmd(pCommand);
         return 0;
     }
 };

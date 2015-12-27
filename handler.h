@@ -17,7 +17,7 @@ namespace NSQTOOL
         CThread *GetThread();
         void SetHandlerId(uint64_t iHandleId);
         void SetThread(CThread *pThread);
-        virtual void ProcessCmd(CCommand &cCmd) = 0;
+        virtual void ProcessCmd(CCommand *pCmd) = 0;
     private:
         uint64_t m_iHandlerId;
         CThread *m_pThread;

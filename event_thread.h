@@ -13,6 +13,13 @@
 
 namespace NSQTOOL
 {
+    struct SNetCallBackContext
+    {
+        int32_t m_iThreadType;
+        int32_t m_iThreadId;
+        uint64_t m_iHandlerId;
+    };
+
     class CEventThread:public CThread
     {
     public:
@@ -20,6 +27,10 @@ namespace NSQTOOL
         ~CEventThread();
         void NotifyWait();
         void RealRun();
+        event_base *GetEventBase()
+        {
+            return m_pEventBase; 
+        }
 
     protected:
         event_base *m_pEventBase;

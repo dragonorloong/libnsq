@@ -17,8 +17,7 @@ namespace NSQTOOL
 {
     struct CHandlerContext
     {
-        CTcpHandler *m_pHandler; 
-        int m_iProtocolId;
+        CAddr m_cAddr; 
         string m_strNsqdHost;
         uint16_t m_iNsqdPort;
         string m_strTopic;
@@ -55,7 +54,7 @@ namespace NSQTOOL
         
         }
 
-        void RealProcessCmd(CCommand &cCmd); 
+        void RealProcessCmd(CCommand *pCmd); 
 
         static void InitSuperServer(int iThreadNum, 
                              int iConnectNum, 
@@ -78,23 +77,31 @@ namespace NSQTOOL
                                 BIZCALLBACK pFunc
                                 );
 
-        static CNsqLookupContext &LookupConnectCallBack(int iProtocolId);
-        static void LookupReadCallBack(int iProtocolId, const vector<string> &vecChannels, 
-                                        const vector<CNsqLookupResponse::SProducers> &vecProducers);
+        static void LookupReadCallBack(const string &strTopic, const string &strChannel,
+                        const vector<string> &vecChannels, const vector<CNsqLookupResponse::SProducers> &vecProducers);
+
         static void NewNsqdConnect(const string &strTopic, const string &strChannel, 
                             const string &strHost, uint16_t iPort);
 
-        static CHandlerContext &NsqdConnectCallBack(int iProtocolId, CTcpHandler *pHandler);
-        static void NsqdReadCallBack(int iProtocolId, const string &strMsgId, const string &strMsgBody);
-        static void NsqdErrorCallBack(int iProtocolId);
+        static void NsqdConnectCallBack(
+            CAddr &cAddr, const string &strNsqdHost
+            , const uint16_t iPort, const string &strTopic
+            , const string &strChannel);
+
+        static void NsqdReadCallBack(const string &strTopic, 
+                                       const string &strChannel,
+                                       const string &strMsgId, 
+                                       const string &strMsgBody);
+
+        static void NsqdErrorCallBack(CAddr &cAddr
+            , const string &strTopic
+            , const string &strChannel);
         static int ProducerMsg(const string &strTopic, const string &strMsg);
         static void OnTimeOut();
     private:
         static map<string, vector<CHandlerContext> > m_mapTopic2Handler;
-        static map<int, string> m_mapHandler2Topic;
-        static map<int, CNsqLookupContext> m_mapLookupContext;
+        static map<string, CNsqLookupContext> m_mapLookupContext;
         static int m_iConnectNum;
-        static int m_iProtocolId;
         static int m_iThreadNum;
         static CLock m_cLock;
     public:

@@ -42,6 +42,5 @@ namespace NSQTOOL
             event_base_dispatch(m_pEventBase);
         }
     }
-
 };
 

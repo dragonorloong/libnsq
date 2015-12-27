@@ -7,43 +7,42 @@
 
 namespace NSQTOOL
 {
-        CNsqdHandler::CNsqdHandler(int iProtocolType, int iProtocolId,
+        CNsqdHandler::CNsqdHandler(int iCmdType, int iCmdId,
                 uint64_t iHandlerId, CThread *pThread)
-            :CTcpHandler(iProtocolType, iProtocolId, iHandlerId, pThread)
+            :CTcpHandler(iCmdType, iCmdId, iHandlerId, pThread)
         {
 
         }
 
         void CNsqdHandler::OnConnect()
         {
-            CHandlerContext &cHandlerContext = CMainThread::NsqdConnectCallBack(m_iProtocolId, this);
-            cHandlerContext.m_pHandler = this;
+            CAddr cAddr;
+            cAddr.m_iThreadType = GetThread()->GetThreadType();
+            cAddr.m_iThreadId = GetThread()->GetThreadId();
+            cAddr.m_iHandlerId = GetHandlerId();
+            CMainThread::NsqdConnectCallBack(cAddr, m_strHost, m_iPort, m_strTopic, m_strChannel);
 
 	        CNsqdRequest cNsqdRequest;
             cNsqdRequest.Megic();	
 
             //消费者
-            if (!cHandlerContext.m_strChannel.empty())
+            if (!m_strChannel.empty())
             {
-                cNsqdRequest.Subscribe(cHandlerContext.m_strTopic, cHandlerContext.m_strChannel);                
+                cNsqdRequest.Subscribe(m_strTopic, m_strChannel);                
 	            cNsqdRequest.Ready(100);
             }
 
-            dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
-                    &cNsqdRequest.Encode(), true);
-
-            
+            SendData(cNsqdRequest.Encode().c_str(), cNsqdRequest.Encode().length());
         }
 
         void CNsqdHandler::OnError(int iErrorNo)
         {
-            CMainThread::NsqdErrorCallBack(m_iProtocolId);
+            CAddr cAddr;
+            cAddr.m_iThreadType = GetThread()->GetThreadType();
+            cAddr.m_iThreadId = GetThread()->GetThreadId();
+            cAddr.m_iHandlerId = GetHandlerId();
+            CMainThread::NsqdErrorCallBack(cAddr, m_strTopic, m_strChannel);
             GetThread()->DestoryHandler(GetHandlerId());          
-
-            if (m_pListenHandler != NULL)
-            {
-                 
-            }
         }
 
         int CNsqdHandler::ProcessRead()
@@ -56,8 +55,7 @@ namespace NSQTOOL
                 {
                     CNsqdRequest cNsqdRequest;
                     cNsqdRequest.Nop();
-                    dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
-                                                                     &cNsqdRequest.Encode(), true);
+                    SendData(cNsqdRequest.Encode().c_str(), cNsqdRequest.Encode().length());
                 }
 
             }
@@ -68,11 +66,26 @@ namespace NSQTOOL
                 //直接返回FIN，可能会丢包
                 CNsqdRequest cNsqdRequest;
                 cNsqdRequest.Finish(strMsgId);
-                dynamic_cast<CNetThread*>(GetThread())->SendData(GetBufferevent(), 
-                    &cNsqdRequest.Encode(), true);
-                CMainThread::NsqdReadCallBack(m_iProtocolId, strMsgId, strBody);
+                SendData(cNsqdRequest.Encode().c_str(), cNsqdRequest.Encode().length());
+                CMainThread::NsqdReadCallBack(m_strTopic, m_strChannel, strMsgId, strBody);
             }
 
             return 0;
+        }
+
+        void CNsqdHandler::ProcessCmd(CCommand *pCmd)
+        {
+            switch(pCmd->GetCmdType()) 
+            {
+                case TCP_CONNECT_TYPE:
+                {
+                    CNsqLookupCommand *pLookupCommand = dynamic_cast<CNsqLookupCommand *>(pCmd);  
+                    m_strTopic = pLookupCommand->m_strTopic;
+                    m_strChannel = pLookupCommand->m_strChannel;
+                }
+                break;
+            }
+
+            CTcpHandler::ProcessCmd(pCmd);
         }
 };

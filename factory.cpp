@@ -14,67 +14,71 @@
 namespace NSQTOOL
 {
     CThread *CNsqFactory::GenThread(int iThreadType, int iThreadId)
+    {
+        switch(iThreadType)
         {
-            switch(iThreadType)
+            case NET_THREAD_TYPE:
             {
-                case NET_THREAD_TYPE:
-                {
-                    return new CNetThread(iThreadType, iThreadId); 
-                }
-                case LISTEN_THREAD_TYPE:
-                {
-                    return new CListenThread(iThreadType, iThreadId); 
-                }
-                case TIMER_THREAD_TYPE:
-                {
-                    return new CTimerThread(iThreadType, iThreadId); 
-                }
-                case MAIN_THREAD_TYPE:
-                {
-                    return new CMainThread(iThreadType, iThreadId); 
-                }
-                default:
-                {
-                    return NULL; 
-                }
+                return new CNetThread(iThreadType, iThreadId); 
+            }
+            case LISTEN_THREAD_TYPE:
+            {
+                return new CListenThread(iThreadType, iThreadId); 
+            }
+            case TIMER_THREAD_TYPE:
+            {
+                return new CTimerThread(iThreadType, iThreadId); 
+            }
+            case MAIN_THREAD_TYPE:
+            {
+                return new CMainThread(iThreadType, iThreadId); 
+            }
+            default:
+            {
+                return NULL; 
             }
         }
+    }
 
-        CProtocol *CNsqFactory::GenProtocol(int iProtocolType)
+    CProtocol *CNsqFactory::GenProtocol(int iCmdType, int iCmdId)
+    {
+        switch (iCmdId) 
         {
-            switch (iProtocolType) 
+            case NSQLOOKUP_TYPE:
             {
-                case NSQLOOKUP_TYPE:
-                {
-                    return new CNsqLookupResponse(); 
-                }
-                case NSQD_TYPE:
-                {
-                    return new CNsqdResponse(); 
-                }
-                default:
-                {
-                    return NULL; 
-                }
+                return new CNsqLookupResponse(); 
+            }
+            case NSQD_TYPE:
+            {
+                return new CNsqdResponse(); 
+            }
+            default:
+            {
+                return NULL; 
             }
         }
+    }
 
-        CHandler *CNsqFactory::GenHandler(int iProtocolType, int iProtocolId, 
-                int iHandlerId, CThread *pThread)
+    CHandler *CNsqFactory::GenHandler(int iCmdType, int iCmdId, 
+            int iHandlerId, CThread *pThread)
+    {
+        switch (iCmdId) 
         {
-            switch (iProtocolType) 
+            case NSQLOOKUP_TYPE:
             {
-                case NSQLOOKUP_TYPE:
-                {
-                    return new CNsqLookupHandler(iProtocolType, iProtocolId, 
-                            iHandlerId, pThread);
-                }
-                case NSQD_TYPE:
-                {
-                    return new CNsqdHandler(iProtocolType, iProtocolId, 
-                            iHandlerId, pThread);
-                }
+                return new CNsqLookupHandler(iCmdType, iCmdId, 
+                        iHandlerId, pThread);
+            }
+            case NSQD_TYPE:
+            {
+                return new CNsqdHandler(iCmdType, iCmdId, 
+                        iHandlerId, pThread);
+            }
+            default:
+            {
+                return NULL;
             }
         }
+    }
 
 };

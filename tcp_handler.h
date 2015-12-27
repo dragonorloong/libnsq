@@ -2,37 +2,34 @@
 #define _TCP_HANDLER_
 #include <iostream>
 #include <string>
-using namespace std;
 #include "factory.h"
 #include "event2/bufferevent.h"
 #include "command.h"
 #include "handler.h"
 
+using namespace std;
+
 namespace NSQTOOL
 {
-    class CListenHandler;
-
     class CTcpHandler:public CHandler
     {
     public: 
-        CTcpHandler(int iProtocolType, int iProtocolId,
+        CTcpHandler(int iCmdType, int iCmdId,
                 uint64_t iHandlerId, CThread *pThread);
+        ~CTcpHandler();
 
         virtual void OnConnect();
         virtual void OnError(int iErrorNo);
         virtual int OnRead(const char *pData, int iLength);
         virtual int ProcessRead();
-        virtual void ProcessCmd(CCommand &cCmd);
+        virtual void ProcessCmd(CCommand *pCmd);
 
-        void SetListenHandler(CListenHandler *pListenHandler)
-        {
-            m_pListenHandler = pListenHandler; 
-        }
-
-        CListenHandler *GetListenHandler()
-        {
-            return m_pListenHandler; 
-        }
+        virtual void TcpConnect(CCommand *pCmd);
+        virtual void TcpSend(CCommand *pCmd);
+        virtual void TcpAdd(CCommand *pCmd); 
+        virtual void TcpRead(CCommand *pCmd);
+        virtual void TcpDelete(CCommand *pCmd);
+        void SendData(const char *pData, int32_t iLength);
 
         void SetBufferevent(bufferevent *pBufevt)
         {
@@ -44,34 +41,13 @@ namespace NSQTOOL
             return m_pBufevt; 
         }
 
-        void SetHost(const string &strHost)
-        {
-            m_strHost = strHost; 
-        }
-
-        string GetHost()
-        {
-            return m_strHost; 
-        }
-
-        void SetPort(uint16_t iPort)
-        {
-            m_iPort = iPort; 
-        }
-
-        uint16_t GetPort()
-        {
-            return m_iPort; 
-        }
-
     protected:
         CProtocol *m_pProtocol;
+        int m_iCmdType;
+        int m_iCmdId;
+        bufferevent *m_pBufevt;
         string m_strHost;
         uint16_t m_iPort;
-        int m_iProtocolType;
-        int m_iProtocolId;
-        bufferevent *m_pBufevt;
-        CListenHandler *m_pListenHandler;
     };
 };
 #endif
