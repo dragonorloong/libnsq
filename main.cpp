@@ -29,18 +29,21 @@ void NsqLogCallBack(int iLogLevel, const char *pLogMsg)
 int main()
 {
     //线程个数，每个nsqd连接个数，日志级别，日志回调函数
-    CMainThread::InitSuperServer(1, 1, LOG_DEBUG, NsqLogCallBack);
+    CMainThread::InitSuperServer(10, 100, LOG_DEBUG, NsqLogCallBack);
     //设置消费者，lookup host,lookup_port topic channel，消息回调函数 
     CMainThread::SetConsumer("10.10.159.130", 4161, "Login", "test", ConsumerCallBack);
     //设置生产者,参数同上
-   // CMainThread::SetProducer("10.10.159.130", 4161, "Login", ConsumerCallBack);
+    CMainThread::SetProducer("10.10.159.130", 4161, "Login", ConsumerCallBack);
     // 启动服务
 
     CMainThread::StartSuperServer();
+	while (1)
+	{
     //生产消息
-    //int iRet = CMainThread::ProducerMsg("Login", "test");
+    int iRet = CMainThread::ProducerMsg("Login", "test");
 
     //printf("ProducerMsg iRet = %d\n", iRet);
+	}
 
     while(1)
     sleep(100);

@@ -17,6 +17,7 @@ namespace NSQTOOL
 
         void CNsqLookupHandler::OnConnect()
         {
+		NsqLogPrintf(LOG_DEBUG, "CNsqLookupHandler OnConnect CallBack");
             string strUrl = "/lookup?topic=";
             strUrl += m_strTopic;
 
@@ -35,6 +36,7 @@ namespace NSQTOOL
 
         int CNsqLookupHandler::ProcessRead()
         {
+		NsqLogPrintf(LOG_DEBUG, "LookupHandler ProcessRead\n");
             CNsqLookupResponse *pProtocol = dynamic_cast<CNsqLookupResponse *>(m_pProtocol);
 
             if (find(pProtocol->GetChannels().begin(), pProtocol->GetChannels().end(), m_strChannel) == pProtocol->GetChannels().end() && !m_strChannel.empty())
@@ -63,6 +65,8 @@ namespace NSQTOOL
                     CNsqLookupCommand *pLookupCommand = dynamic_cast<CNsqLookupCommand *>(pCmd);  
                     m_strTopic = pLookupCommand->m_strTopic;
                     m_strChannel = pLookupCommand->m_strChannel;
+			NsqLogPrintf(LOG_DEBUG, "NsqdLookupHandler Connect topic = %s\n, channel = %s\n", 
+			m_strTopic.c_str(), m_strChannel.c_str());
                 }
                 break;
             }

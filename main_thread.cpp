@@ -19,6 +19,7 @@ namespace NSQTOOL
 {
     void CMainThread::OnTimeOut()
     {
+	NsqLogPrintf(LOG_DEBUG, "OnTimeOut");
         CGuard<CLock> cGuard(&m_cLock);
         map<string, CNsqLookupContext>::iterator iter = 
             m_mapLookupContext.begin();
@@ -111,6 +112,8 @@ namespace NSQTOOL
         cLookup.m_funcCallBack = pFunc;
 
         m_mapLookupContext[strTopic + "_" + strChannel] = cLookup;
+    	NsqLogPrintf(LOG_DEBUG, "SetConsumer lookuphost = %s, lookupport = %d, topic = %s, channel = %s\n", 
+		strLookupHost.c_str(), iLookupPort, strTopic.c_str(), strChannel.c_str());
     }
 
     void CMainThread::InitSuperServer(int iThreadNum, 
@@ -176,6 +179,7 @@ namespace NSQTOOL
             cCmdAddr.m_cDstAddr.m_iThreadType = NET_THREAD_TYPE;
             pCmd->SetAddr(cCmdAddr);
             CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
+		iConnectNum ++;
         }
     }
 
@@ -183,7 +187,8 @@ namespace NSQTOOL
                         const vector<string> &vecChannels, const vector<CNsqLookupResponse::SProducers> &vecProducers)
     {
         CGuard<CLock> cGuard(&m_cLock);
-
+	NsqLogPrintf(LOG_DEBUG, "LookupReadCallBack, topic = %s, channel = %s", strTopic.c_str(), strChannel.c_str());
+	NsqLogPrintf(LOG_DEBUG, "LookupReadCallBack, vecChannels.size = %d, vecProducers.size = %d", vecChannels.size(), vecProducers.size());
         vector<CNsqLookupResponse::SProducers>::const_iterator iter = 
             vecProducers.begin();
 
@@ -249,6 +254,9 @@ namespace NSQTOOL
 
     int CMainThread::ProducerMsg(const string &strTopic, const string &strMsg)
     {
+	CAddr cAddr; 
+	do
+	{
         CGuard<CLock> cGuard(&m_cLock);
 
         if (m_mapTopic2Handler[strTopic + "_"].size() == 0)
@@ -257,7 +265,8 @@ namespace NSQTOOL
         }
 
         int iIndex = rand() % m_mapTopic2Handler[strTopic + "_"].size();
-        CAddr cAddr = m_mapTopic2Handler[strTopic + "_"][iIndex].m_cAddr;  
+        cAddr = m_mapTopic2Handler[strTopic + "_"][iIndex].m_cAddr;  
+	}while(0);
         
         //这里应该用异步消息的模式，后续改掉
         CNsqdRequest cNsqdRequest;

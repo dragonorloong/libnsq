@@ -29,6 +29,7 @@ void CTimerThread::OnTimeOut(int iHandle, short iEvent, void *pArg)
     char buff[64] = {0};
     snprintf(buff, sizeof(buff), "%d_%d_%d", 
             pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadType, pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadId, pTimerAddCommand->m_iTimerType);
+	NsqLogPrintf(LOG_DEBUG, "OnTimerOut:%s\n", buff);
     
     CCmdAddr cAddr;
     cAddr.m_cDstAddr.m_iThreadType = pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadType;
@@ -59,6 +60,7 @@ void CTimerThread::TimerAdd(CCommand *pCmd)
     char buff[64] = {0};
     snprintf(buff, sizeof(buff), "%d_%d_%d", 
             pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadType, pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadId, pTimerAddCommand->m_iTimerType);
+	NsqLogPrintf(LOG_DEBUG, "TimerAdd:%s\n", buff);
     pTimerAddCommand->m_pEvent = pEvent;
     pTimerAddCommand->m_pThread = this;
     m_mapTimer[buff] = pTimerAddCommand;
@@ -74,6 +76,7 @@ void CTimerThread::RealProcessCmd(CCommand *pCmd)
         case TIMER_ADD_TYPE:
         {
             TimerAdd(pCmd);
+    		pthread_mutex_unlock(&m_mutex);
             return ;
         }
         case TIMER_DEL_TYPE:

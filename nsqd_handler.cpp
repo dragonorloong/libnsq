@@ -79,9 +79,11 @@ namespace NSQTOOL
             {
                 case TCP_CONNECT_TYPE:
                 {
-                    CNsqLookupCommand *pLookupCommand = dynamic_cast<CNsqLookupCommand *>(pCmd);  
-                    m_strTopic = pLookupCommand->m_strTopic;
-                    m_strChannel = pLookupCommand->m_strChannel;
+                    CNsqdCommand *pCommand = dynamic_cast<CNsqdCommand *>(pCmd);  
+                    m_strTopic = pCommand->m_strTopic;
+                    m_strChannel = pCommand->m_strChannel;
+			NsqLogPrintf(LOG_DEBUG, "NsqdHandler Connect topic = %s\n, channel = %s\n", 
+			m_strTopic.c_str(), m_strChannel.c_str());
                 }
                 break;
             }
