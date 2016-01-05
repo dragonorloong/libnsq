@@ -1,20 +1,20 @@
 #source file
-SRC = main.cpp 
+SRC = main.cpp
 
 #Application name
 APP = bin_test
 
 #Application type BIN SO LIB
-APP_TYPE = BIN 
+APP_TYPE = BIN
 
 #Include
 INCLUDE =  -L/usr/local/lib64 -I3rd/libevent/lib/include -I3rd/jsoncpp/lib/include
 
-#Link lib 
-LINK_LIB = -L./bin/ -lnsqclient -L3rd/libevent/lib -levent -lrt  -lpthread -L3rd/jsoncpp/lib -ljsoncpp -g
+#Link lib
+LINK_LIB = -L./bin/ -lnsqclient 3rd/libevent/lib/lib/libevent.a -lrt  -lpthread -L3rd/jsoncpp/lib -ljsoncpp -g
 
 #Install Path
-INSTALL_PATH = 
+INSTALL_PATH =
 
 #Bin Path
 BIN_PATH = bin
@@ -26,7 +26,7 @@ OBJ_PATH = obj
 CXX = g++
 
 #Options
-CFLAGS = -g 
+CFLAGS = -g
 
 #Obj and bin directory Judge
 ifeq ($(strip $(BIN_PATH)),)
@@ -53,7 +53,7 @@ else
 	else
 		ifeq "$(strip $(APP_TYPE))" "BIN"
 			DEST = $(BIN_PATH)/$(APP)
-			LINKER = $(CXX)  -o $(DEST) 
+			LINKER = $(CXX)  -o $(DEST)
 		endif
 	endif
 endif
@@ -79,7 +79,7 @@ install_all : all
 	fi
 
 
-all:init  $(DEST) 
+all:init  $(DEST)
 
 init:
 	@mkdir -p $(BIN_PATH)
@@ -97,7 +97,7 @@ $(DEPS):$(OBJ_PATH)/%.d:%.cpp
 	set -e;rm -f  $@;\
 	$(CXX) $(CFLAGS) -MM $(INCLUDE) $< > $@.$$$$;\
 	sed 's, \($*\)\.o[ :]*,\1.o $@ : , g'< $@.$$$$ > $@;\
-	rm -f $@.$$$$	   
+	rm -f $@.$$$$	
 
 include $(DEPS)
 
