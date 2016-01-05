@@ -19,13 +19,9 @@ namespace NSQTOOL
     public:
         CTimerThread(int32_t iThreadType, int32_t iThreadId);
         void TimerAdd(CCommand *pCmd);
+        virtual ~CTimerThread();
  //       void TimerDel(CCommand *pCmd);
 //        void KeepAlive(CCommand *pCmd);
-
-        ~CTimerThread()
-        {
-            pthread_mutex_destroy(&m_mutex);
-        }
 
 		void RealProcessCmd(CCommand *pCmd);
         static void OnStaticTimeOut(int iHandle, short iEvent, void *pArg);

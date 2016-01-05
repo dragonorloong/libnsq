@@ -19,7 +19,7 @@ namespace NSQTOOL
 {
     void CMainThread::OnTimeOut()
     {
-	NsqLogPrintf(LOG_DEBUG, "OnTimeOut");
+	    NsqLogPrintf(LOG_DEBUG, "OnTimeOut");
         CGuard<CLock> cGuard(&m_cLock);
         map<string, CNsqLookupContext>::iterator iter = 
             m_mapLookupContext.begin();
@@ -37,6 +37,7 @@ namespace NSQTOOL
             pCmd->SetAddr(cCmdAddr);
             CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
         }
+        
     }
 
     //持续发现
@@ -55,6 +56,8 @@ namespace NSQTOOL
                 break;
            }
        }
+
+        delete pCmd;
     }
 
     map<string, vector<CHandlerContext> > CMainThread::m_mapTopic2Handler;
@@ -155,6 +158,11 @@ namespace NSQTOOL
         OnTimeOut();
     }
 
+    void CMainThread::StopSuperServer()
+    {
+        CThreadMgrSingleton::GetInstance()->Stop(); 
+    }
+
     void CMainThread::NewNsqdConnect(const string &strTopic, const string &strChannel, 
             const string &strHost, uint16_t iPort)
     {
@@ -179,7 +187,7 @@ namespace NSQTOOL
             cCmdAddr.m_cDstAddr.m_iThreadType = NET_THREAD_TYPE;
             pCmd->SetAddr(cCmdAddr);
             CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
-		iConnectNum ++;
+		    iConnectNum ++;
         }
     }
 
@@ -187,8 +195,8 @@ namespace NSQTOOL
                         const vector<string> &vecChannels, const vector<CNsqLookupResponse::SProducers> &vecProducers)
     {
         CGuard<CLock> cGuard(&m_cLock);
-	NsqLogPrintf(LOG_DEBUG, "LookupReadCallBack, topic = %s, channel = %s", strTopic.c_str(), strChannel.c_str());
-	NsqLogPrintf(LOG_DEBUG, "LookupReadCallBack, vecChannels.size = %d, vecProducers.size = %d", vecChannels.size(), vecProducers.size());
+	    NsqLogPrintf(LOG_DEBUG, "LookupReadCallBack, topic = %s, channel = %s", strTopic.c_str(), strChannel.c_str());
+	    NsqLogPrintf(LOG_DEBUG, "LookupReadCallBack, vecChannels.size = %d, vecProducers.size = %d", vecChannels.size(), vecProducers.size());
         vector<CNsqLookupResponse::SProducers>::const_iterator iter = 
             vecProducers.begin();
 

@@ -29,7 +29,7 @@ namespace NSQTOOL
             if (!m_strChannel.empty())
             {
                 cNsqdRequest.Subscribe(m_strTopic, m_strChannel);                
-	            cNsqdRequest.Ready(100);
+	            cNsqdRequest.Ready(1000);
             }
 
             SendData(cNsqdRequest.Encode().c_str(), cNsqdRequest.Encode().length());
@@ -82,8 +82,8 @@ namespace NSQTOOL
                     CNsqdCommand *pCommand = dynamic_cast<CNsqdCommand *>(pCmd);  
                     m_strTopic = pCommand->m_strTopic;
                     m_strChannel = pCommand->m_strChannel;
-			NsqLogPrintf(LOG_DEBUG, "NsqdHandler Connect topic = %s\n, channel = %s\n", 
-			m_strTopic.c_str(), m_strChannel.c_str());
+			        NsqLogPrintf(LOG_DEBUG, "NsqdHandler Connect topic = %s\n, channel = %s\n", 
+			        m_strTopic.c_str(), m_strChannel.c_str());
                 }
                 break;
             }

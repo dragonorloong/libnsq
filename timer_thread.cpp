@@ -16,6 +16,24 @@ CTimerThread::CTimerThread(int32_t iThreadType, int32_t iThreadId)
     pthread_mutex_init(&m_mutex, NULL);
 }
 
+CTimerThread::~CTimerThread()
+{
+    pthread_mutex_lock(&m_mutex);
+    map<string, CTimerAddCommand *>::iterator iter = m_mapTimer.begin();
+
+    for (; iter != m_mapTimer.end(); ++iter)
+    {
+        evtimer_del(iter->second->m_pEvent);
+        event_free(iter->second->m_pEvent);
+        delete iter->second;
+    }
+
+    m_mapTimer.clear();
+
+    pthread_mutex_unlock(&m_mutex);
+    pthread_mutex_destroy(&m_mutex);
+}
+
 void CTimerThread::OnStaticTimeOut(int iHandle, short iEvent, void *pArg)
 {
     CTimerThread *pThis = dynamic_cast<CTimerThread *>(((CTimerAddCommand *)pArg)->m_pThread);
@@ -64,7 +82,7 @@ void CTimerThread::TimerAdd(CCommand *pCmd)
     pTimerAddCommand->m_pEvent = pEvent;
     pTimerAddCommand->m_pThread = this;
     m_mapTimer[buff] = pTimerAddCommand;
-  
+    //delete pCmd; 
 }
 
 void CTimerThread::RealProcessCmd(CCommand *pCmd)

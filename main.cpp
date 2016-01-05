@@ -23,29 +23,38 @@ void ConsumerCallBack(int iProtocolId, const string &strMsgId, const string &str
 
 void NsqLogCallBack(int iLogLevel, const char *pLogMsg)
 {
-    printf("%s\n", pLogMsg);
+//    printf("%s\n", pLogMsg);
 }
 
 int main()
 {
     //线程个数，每个nsqd连接个数，日志级别，日志回调函数
-    CMainThread::InitSuperServer(10, 100, LOG_DEBUG, NsqLogCallBack);
+    CMainThread::InitSuperServer(10, 200, LOG_ERROR, NsqLogCallBack);
     //设置消费者，lookup host,lookup_port topic channel，消息回调函数 
-    CMainThread::SetConsumer("10.10.159.130", 4161, "Login", "test", ConsumerCallBack);
+   // CMainThread::SetConsumer("10.10.200.130", 4161, "Login", "test", ConsumerCallBack);
     //设置生产者,参数同上
-    CMainThread::SetProducer("10.10.159.130", 4161, "Login", ConsumerCallBack);
+    CMainThread::SetProducer("10.10.200.130", 4161, "Login", ConsumerCallBack);
     // 启动服务
+    //
 
     CMainThread::StartSuperServer();
+    int iCount = 0;
 	while (1)
 	{
-    //生产消息
-    int iRet = CMainThread::ProducerMsg("Login", "test");
-
-    //printf("ProducerMsg iRet = %d\n", iRet);
+        //生产消息
+       int iRet = CMainThread::ProducerMsg("Login", "testdjfklsk");
+       // sleep(10);
+        //
+    iCount++;
+    if (iCount%10000 == 0)
+        sleep(1);
+	if (iRet != 0)
+        printf("ProducerMsg iRet = %d\n", iRet);
 	}
-
+ //   sleep(10);
     while(1)
-    sleep(100);
+        sleep(100);
+
+    CMainThread::StopSuperServer();
 }
 

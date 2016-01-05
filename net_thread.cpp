@@ -21,7 +21,7 @@ namespace NSQTOOL
         cCmdAddr.m_cDstAddr = *pAddr;
         pCmd->SetAddr(cCmdAddr);
         CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
-	NsqLogPrintf(LOG_DEBUG, "OnStaticRead ThreadType = %d, ThreadId = %d, HandlerId = %ld", 
+	    NsqLogPrintf(LOG_DEBUG, "OnStaticRead ThreadType = %d, ThreadId = %d, HandlerId = %ld", 
 		pAddr->m_iThreadType, pAddr->m_iThreadId, pAddr->m_iHandlerId);
     }
 

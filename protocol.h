@@ -13,6 +13,11 @@ namespace NSQTOOL
             m_strStream = "";
         }
 
+        virtual ~CProtocol()
+        {
+            m_strStream.clear();
+        }
+
 		virtual int32_t Need(const char *pData, int32_t iLength) = 0;
         int32_t NextPkg();
         virtual void Decode() = 0;

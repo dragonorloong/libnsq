@@ -84,7 +84,6 @@ namespace NSQTOOL
         int32_t GetCmdId();
 		CCmdAddr &GetAddr();
 		void SetAddr(CCmdAddr &cCmdAddr);
-				
 	private:
 		int32_t m_iCmdType;
         int32_t m_iCmdId;

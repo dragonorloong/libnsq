@@ -15,6 +15,7 @@ namespace NSQTOOL
     class CLock
     {
     public:
+
         CLock(int recursive = 1)
         {
             pthread_mutexattr_t attr;

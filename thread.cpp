@@ -22,6 +22,19 @@ namespace NSQTOOL
     
     CThread::~CThread()
     {
+        pthread_mutex_lock(&m_mutex);
+        map<uint64_t, CHandler *>::iterator iter = m_mapHandler.begin();
+
+        for (; iter != m_mapHandler.end();)
+        {
+            NsqLogPrintf(LOG_DEBUG, "~Thread Type = %d", m_iThreadType);
+            DestoryHandler(iter->second->GetHandlerId()); 
+            iter = m_mapHandler.begin();
+        }
+
+        NsqLogPrintf(LOG_DEBUG, "~Thread end Type = %d", m_iThreadType);
+
+        pthread_mutex_unlock(&m_mutex);
         pthread_mutex_destroy(&m_mutex);
         pthread_mutex_destroy(&m_mutexSync);
         pthread_cond_destroy(&m_cond);
@@ -147,6 +160,7 @@ namespace NSQTOOL
     void CThread::Stop()
     {
         m_bStop = true;
+        NotifyWait();
         pthread_join(m_iTid, NULL);
     }
 
@@ -162,6 +176,7 @@ namespace NSQTOOL
             m_mapHandler.erase(iHandlerId);
         }
 
+        NsqLogPrintf(LOG_DEBUG, "CThread::DestoryHandler iHandlerId = %d end\n", iHandlerId);
         pthread_mutex_unlock(&m_mutex);
     }
 
@@ -181,6 +196,7 @@ namespace NSQTOOL
 
     void CThreadMgr::RegisterThreadPool(CThreadPool *pThreadPool)
     {
+        NsqLogPrintf(LOG_DEBUG, "registerthreadpool threadtype = %d", pThreadPool->GetThreadType());
         m_mapThreadPool[pThreadPool->GetThreadType()] = pThreadPool;
     }
 
@@ -204,12 +220,15 @@ namespace NSQTOOL
     {
         std::map<int32_t, CThreadPool*>::iterator iter = m_mapThreadPool.begin();
 
-        for (; iter != m_mapThreadPool.end(); ++iter)
+        for (; iter != m_mapThreadPool.end(); iter++)
         {
             iter->second->Stop();
             delete iter->second;
-            iter = m_mapThreadPool.begin();
+            //iter = m_mapThreadPool.erase(iter);
+            //iter = m_mapThreadPool.begin();
         }
+
+        m_mapThreadPool.clear();
     } 
 
     void CThreadMgr::Run()
@@ -282,6 +301,7 @@ namespace NSQTOOL
     {
         for (int i = 0; i < m_iTotalThreadNum; ++i)
         {
+            NsqLogPrintf(LOG_DEBUG, "threadtype = %d, total = %d, i = %d", m_iThreadType, m_iTotalThreadNum, i);
             m_vecThread[i]->Stop();
         }
     }

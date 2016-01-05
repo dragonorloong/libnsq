@@ -63,6 +63,7 @@ namespace NSQTOOL
                              );
 
         static void StartSuperServer();
+        static void StopSuperServer();
 
         static void SetProducer(const string &strLookupHost,
                                 uint16_t iLookupPort, 

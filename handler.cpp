@@ -3,6 +3,7 @@
 
 namespace NSQTOOL
 {
+
     CHandler::CHandler(uint64_t iHandlerId, CThread *pThread):
         m_iHandlerId(iHandlerId), m_pThread(pThread)
     {

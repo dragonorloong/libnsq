@@ -19,7 +19,11 @@ namespace NSQTOOL
         CTcpHandler::~CTcpHandler()
         {
             close(bufferevent_getfd(GetBufferevent()));
+            CAddr *pAddr;
+            bufferevent_getcb(GetBufferevent(), NULL, NULL, NULL, (void **)&pAddr);
+            delete pAddr;
             bufferevent_free(GetBufferevent()); 
+            delete m_pProtocol;
            // CThread::DestoryHandler(iHandlerId);
         }
 
@@ -36,7 +40,7 @@ namespace NSQTOOL
         int CTcpHandler::OnRead(const char *pData, int iLength)
         {
             int iNeed = m_pProtocol->Need(pData, iLength); 
-		NsqLogPrintf(LOG_DEBUG, "OnRead iNeed = %d", iNeed);	
+		    NsqLogPrintf(LOG_DEBUG, "OnRead iNeed = %d", iNeed);	
             if (iLength == 0)
             {
             }
@@ -71,7 +75,7 @@ namespace NSQTOOL
             char *pData = new char[iLength + 1];
             bufferevent_read(m_pBufevt, pData, iLength);			
             pData[iLength] = '\0';
-		NsqLogPrintf(LOG_DEBUG, "TcpRead iLength = %d\n", iLength);
+		    NsqLogPrintf(LOG_DEBUG, "TcpRead iLength = %d\n", iLength);
 
             //iNeedLength 证明包处理出错，已经析构掉了handler相关的一些
             int iNeedLength = OnRead(pData, iLength); 
@@ -122,11 +126,12 @@ namespace NSQTOOL
             }
 
             delete []  pSendCommand->m_pSendData;
+
         }
 
         void CTcpHandler::TcpConnect(CCommand *pCmd)
         {
-		NsqLogPrintf(LOG_DEBUG, "TcpConnect\n");
+	    NsqLogPrintf(LOG_DEBUG, "TcpConnect\n");
             CTcpConnectCommand *pConnectCmd = dynamic_cast<CTcpConnectCommand *>(pCmd);
             m_strHost = pConnectCmd->m_strHost;
             m_iPort = pConnectCmd->m_iPort;
@@ -150,7 +155,7 @@ namespace NSQTOOL
             pAddr->m_iThreadType = GetThread()->GetThreadType();
             pAddr->m_iThreadId = GetThread()->GetThreadId();
             pAddr->m_iHandlerId = GetHandlerId();
-		NsqLogPrintf(LOG_DEBUG, "OnConnect ThreadType = %d, ThreadId = %d, HandlerId = %ld\n",
+		    NsqLogPrintf(LOG_DEBUG, "OnConnect ThreadType = %d, ThreadId = %d, HandlerId = %ld\n",
 				pAddr->m_iThreadType, pAddr->m_iThreadId, pAddr->m_iHandlerId);
 
             bufferevent_setcb(m_pBufevt, CNetThread::OnStaticRead, NULL, CNetThread::OnStaticError, pAddr);
