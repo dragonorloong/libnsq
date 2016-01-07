@@ -71,11 +71,12 @@ namespace NSQTOOL
 		int32_t m_iTotalThreadNum;
 		uint64_t m_iCurrentNum;
 		int32_t m_iThreadType;
+        CLock m_cLock;
 	};
 
 	class CThreadMgr
 	{
-	friend CSingleton<CThreadMgr>;
+	friend class CSingleton<CThreadMgr>;
 	private:
 		CThreadMgr() { }
 	public:
@@ -86,6 +87,7 @@ namespace NSQTOOL
         void Run();
 	private:
 		std::map<int32_t, CThreadPool*> m_mapThreadPool;
+        CLock m_cLock;
 	};
 
 	typedef CSingleton<CThreadMgr> CThreadMgrSingleton;

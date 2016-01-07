@@ -45,15 +45,16 @@ int main()
        int iRet = CNsqThread::ProducerMsg("Login", "testdjfklsk");
        // sleep(10);
         //
-    iCount++;
-    if (iCount%10000 == 0)
-        sleep(1);
-	if (iRet != 0)
-        printf("ProducerMsg iRet = %d\n", iRet);
+        iCount++;
+
+        if (iRet != 0)
+            printf("ProducerMsg iRet = %d\n", iRet);
+
+        if (iCount % 1000000 == 0)
+        {
+            break;
+        }
 	}
- //   sleep(10);
-    while(1)
-        sleep(100);
 
     CNsqThread::StopSuperServer();
 }

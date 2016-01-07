@@ -18,7 +18,7 @@ namespace NSQTOOL
 
     class CNsqFactory:public CFactory
     {
-    friend CSingleton<CNsqFactory>;
+    friend class CSingleton<CNsqFactory>;
 
     private:
         CNsqFactory()

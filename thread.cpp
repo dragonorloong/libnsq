@@ -194,53 +194,6 @@ namespace NSQTOOL
         pThread->RealRun();
     }
 
-    void CThreadMgr::RegisterThreadPool(CThreadPool *pThreadPool)
-    {
-        NsqLogPrintf(LOG_DEBUG, "registerthreadpool threadtype = %d", pThreadPool->GetThreadType());
-        m_mapThreadPool[pThreadPool->GetThreadType()] = pThreadPool;
-    }
-
-    void CThreadMgr::SendCmd(CCommand *pCmd) 
-    {
-        if (m_mapThreadPool.find(pCmd->GetAddr().m_cDstAddr.m_iThreadType) != m_mapThreadPool.end())
-        {
-            m_mapThreadPool[pCmd->GetAddr().m_cDstAddr.m_iThreadType]->SendCmd(pCmd);
-        }
-    }
-
-    void CThreadMgr::PostCmd(CCommand *pCmd) 
-    {
-        if (m_mapThreadPool.find(pCmd->GetAddr().m_cDstAddr.m_iThreadType) != m_mapThreadPool.end())
-        {
-            m_mapThreadPool[pCmd->GetAddr().m_cDstAddr.m_iThreadType]->PostCmd(pCmd);
-        }
-    }
-
-    void CThreadMgr::Stop()
-    {
-        std::map<int32_t, CThreadPool*>::iterator iter = m_mapThreadPool.begin();
-
-        for (; iter != m_mapThreadPool.end(); iter++)
-        {
-            iter->second->Stop();
-            delete iter->second;
-            //iter = m_mapThreadPool.erase(iter);
-            //iter = m_mapThreadPool.begin();
-        }
-
-        m_mapThreadPool.clear();
-    } 
-
-    void CThreadMgr::Run()
-    {
-        std::map<int32_t, CThreadPool*>::iterator iter = m_mapThreadPool.begin();
-
-        for (; iter != m_mapThreadPool.end(); ++iter)
-        {
-            iter->second->Run();
-        }
-    }
-
     CThreadPool::CThreadPool(int iThreadType, int iThreadNum)
     {
         m_iCurrentNum = 0;
@@ -257,6 +210,7 @@ namespace NSQTOOL
 
     CThreadPool::~CThreadPool()
     {
+        //CGuard<CLock> guard(&m_cLock);
         for (int i = 0; i< m_vecThread.size(); ++i)
         {
             delete m_vecThread[i]; 
@@ -275,6 +229,7 @@ namespace NSQTOOL
 
     void CThreadPool::SendCmd(CCommand *pCmd)
     {
+        //CGuard<CLock> guard(&m_cLock);
         int iThreadNum = pCmd->GetAddr().m_cDstAddr.m_iThreadId;
 
         if (pCmd->GetAddr().m_cDstAddr.m_iThreadId == -1)
@@ -287,6 +242,7 @@ namespace NSQTOOL
 
     void CThreadPool::PostCmd(CCommand *pCmd)
     {
+        //CGuard<CLock> guard(&m_cLock);
         int iThreadNum = pCmd->GetAddr().m_cDstAddr.m_iThreadId;
 
         if (iThreadNum == -1)
@@ -299,6 +255,8 @@ namespace NSQTOOL
 
     void CThreadPool::Stop()
     {
+        //CGuard<CLock> guard(&m_cLock);
+
         for (int i = 0; i < m_iTotalThreadNum; ++i)
         {
             NsqLogPrintf(LOG_DEBUG, "threadtype = %d, total = %d, i = %d", m_iThreadType, m_iTotalThreadNum, i);
@@ -308,7 +266,63 @@ namespace NSQTOOL
 
     int32_t CThreadPool::GetThreadType()
     {
+        //CGuard<CLock> guard(&m_cLock);
         return m_iThreadType;
     }
-    
+
+    void CThreadMgr::RegisterThreadPool(CThreadPool *pThreadPool)
+    {
+        //CGuard<CLock> guard(&m_cLock);
+        NsqLogPrintf(LOG_DEBUG, "registerthreadpool threadtype = %d", pThreadPool->GetThreadType());
+        m_mapThreadPool[pThreadPool->GetThreadType()] = pThreadPool;
+    }
+
+    void CThreadMgr::SendCmd(CCommand *pCmd) 
+    {
+        //CGuard<CLock> guard(&m_cLock);
+
+        if (m_mapThreadPool.find(pCmd->GetAddr().m_cDstAddr.m_iThreadType) != m_mapThreadPool.end())
+        {
+            m_mapThreadPool[pCmd->GetAddr().m_cDstAddr.m_iThreadType]->SendCmd(pCmd);
+        }
+    }
+
+    void CThreadMgr::PostCmd(CCommand *pCmd) 
+    {
+        //CGuard<CLock> guard(&m_cLock);
+
+        if (m_mapThreadPool.find(pCmd->GetAddr().m_cDstAddr.m_iThreadType) != m_mapThreadPool.end())
+        {
+            m_mapThreadPool[pCmd->GetAddr().m_cDstAddr.m_iThreadType]->PostCmd(pCmd);
+        }
+    }
+
+    void CThreadMgr::Stop()
+    {
+        //CGuard<CLock> guard(&m_cLock);
+
+        std::map<int32_t, CThreadPool*>::iterator iter = m_mapThreadPool.begin();
+
+        for (; iter != m_mapThreadPool.end(); iter++)
+        {
+            iter->second->Stop();
+            delete iter->second;
+            //iter = m_mapThreadPool.erase(iter);
+            //iter = m_mapThreadPool.begin();
+        }
+
+        m_mapThreadPool.clear();
+    } 
+
+    void CThreadMgr::Run()
+    {
+        //CGuard<CLock> guard(&m_cLock);
+
+        std::map<int32_t, CThreadPool*>::iterator iter = m_mapThreadPool.begin();
+
+        for (; iter != m_mapThreadPool.end(); ++iter)
+        {
+            iter->second->Run();
+        }
+    }
 };
