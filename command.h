@@ -30,7 +30,7 @@ namespace NSQTOOL
         NET_THREAD_TYPE = -1,
         LISTEN_THREAD_TYPE = -2,
         TIMER_THREAD_TYPE = -3,
-        MAIN_THREAD_TYPE = -4,
+        NSQ_THREAD_TYPE = -4,
     };
 
     enum ENsqProtocolType

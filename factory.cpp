@@ -2,7 +2,7 @@
 #include "thread.h"
 #include "net_thread.h"
 #include "timer_thread.h"
-#include "main_thread.h"
+#include "nsq_thread.h"
 #include "nsqd_protocol.h"
 #include "nsqlookup_protocol.h"
 #include "handler.h"
@@ -29,9 +29,9 @@ namespace NSQTOOL
             {
                 return new CTimerThread(iThreadType, iThreadId); 
             }
-            case MAIN_THREAD_TYPE:
+            case NSQ_THREAD_TYPE:
             {
-                return new CMainThread(iThreadType, iThreadId); 
+                return new CNsqThread(iThreadType, iThreadId); 
             }
             default:
             {

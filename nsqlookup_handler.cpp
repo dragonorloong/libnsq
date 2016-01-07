@@ -3,7 +3,7 @@
 #include "factory.h"
 #include "net_thread.h"
 #include "nsqlookup_handler.h"
-#include "main_thread.h"
+#include "nsq_thread.h"
 #include "nsqlookup_protocol.h"
 #include <algorithm>
 
@@ -47,7 +47,7 @@ namespace NSQTOOL
             }
 
 
-            CMainThread::LookupReadCallBack(m_strTopic, m_strChannel,
+            CNsqThread::LookupReadCallBack(m_strTopic, m_strChannel,
                                             pProtocol->GetChannels(), 
                                             pProtocol->GetProducers());
 

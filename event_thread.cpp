@@ -36,7 +36,7 @@ namespace NSQTOOL
             CThread::ProcessCmd();
 
             struct timeval sTm; 
-            sTm.tv_sec =0;
+            sTm.tv_sec =10;
             sTm.tv_usec = 1000;
             event_base_loopexit(m_pEventBase, &sTm);	
            // pthread_mutex_lock(&m_mutex);

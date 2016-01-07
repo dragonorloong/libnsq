@@ -1,7 +1,7 @@
 #include "tcp_handler.h"
 #include "thread.h"
 #include "nsqd_handler.h"
-#include "main_thread.h"
+#include "nsq_thread.h"
 #include "nsqd_protocol.h"
 #include "net_thread.h"
 
@@ -20,7 +20,7 @@ namespace NSQTOOL
             cAddr.m_iThreadType = GetThread()->GetThreadType();
             cAddr.m_iThreadId = GetThread()->GetThreadId();
             cAddr.m_iHandlerId = GetHandlerId();
-            CMainThread::NsqdConnectCallBack(cAddr, m_strHost, m_iPort, m_strTopic, m_strChannel);
+            CNsqThread::NsqdConnectCallBack(cAddr, m_strHost, m_iPort, m_strTopic, m_strChannel);
 
 	        CNsqdRequest cNsqdRequest;
             cNsqdRequest.Megic();	
@@ -41,7 +41,7 @@ namespace NSQTOOL
             cAddr.m_iThreadType = GetThread()->GetThreadType();
             cAddr.m_iThreadId = GetThread()->GetThreadId();
             cAddr.m_iHandlerId = GetHandlerId();
-            CMainThread::NsqdErrorCallBack(cAddr, m_strTopic, m_strChannel);
+            CNsqThread::NsqdErrorCallBack(cAddr, m_strTopic, m_strChannel);
             GetThread()->DestoryHandler(GetHandlerId());          
         }
 
@@ -67,7 +67,7 @@ namespace NSQTOOL
                 CNsqdRequest cNsqdRequest;
                 cNsqdRequest.Finish(strMsgId);
                 SendData(cNsqdRequest.Encode().c_str(), cNsqdRequest.Encode().length());
-                CMainThread::NsqdReadCallBack(m_strTopic, m_strChannel, strMsgId, strBody);
+                CNsqThread::NsqdReadCallBack(m_strTopic, m_strChannel, strMsgId, strBody);
             }
 
             return 0;
