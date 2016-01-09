@@ -79,6 +79,7 @@ namespace NSQTOOL
 	friend class CSingleton<CThreadMgr>;
 	private:
 		CThreadMgr() { }
+        ~CThreadMgr();
 	public:
 		void RegisterThreadPool(CThreadPool *pThreadPool);
 		void SendCmd(CCommand *pCmd); 

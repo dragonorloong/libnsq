@@ -90,6 +90,7 @@ namespace NSQTOOL
     void CNsqThread::StopSuperServer()
     {
         CThreadMgrSingleton::GetInstance()->Stop(); 
+        CThreadMgrSingleton::ReleaseInstance();
     }
 
     map<string, vector<CHandlerContext> > CNsqThread::m_mapTopic2Handler;
@@ -265,19 +266,19 @@ namespace NSQTOOL
 
     int CNsqThread::ProducerMsg(const string &strTopic, const string &strMsg)
     {
-	CAddr cAddr; 
-	do
-	{
-        CGuard<CLock> cGuard(&m_cLock);
-
-        if (m_mapTopic2Handler[strTopic + "_"].size() == 0)
+        CAddr cAddr; 
+        do
         {
-            return -1;
-        }
+            CGuard<CLock> cGuard(&m_cLock);
 
-        int iIndex = rand() % m_mapTopic2Handler[strTopic + "_"].size();
-        cAddr = m_mapTopic2Handler[strTopic + "_"][iIndex].m_cAddr;  
-	}while(0);
+            if (m_mapTopic2Handler[strTopic + "_"].size() == 0)
+            {
+                return -1;
+            }
+
+            int iIndex = rand() % m_mapTopic2Handler[strTopic + "_"].size();
+            cAddr = m_mapTopic2Handler[strTopic + "_"][iIndex].m_cAddr;  
+        }while(0);
         
         //这里应该用异步消息的模式，后续改掉
         CNsqdRequest cNsqdRequest;

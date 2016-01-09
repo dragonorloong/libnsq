@@ -8,7 +8,7 @@ APP = nsqclient
 APP_TYPE = LIB 
 
 #Include
-INCLUDE = -I./3rd/libevent/lib/include/ -I./3rd/jsoncpp/lib/include/ 
+INCLUDE = -I./3rd_install/include
 #-I/usr/local/include/json
 #Link lib 
 LINK_LIB = 
@@ -79,7 +79,7 @@ install_all : all
 	fi
 
 
-all:init  $(DEST) 
+all:init $(DEPS) $(DEST) 
 
 init:
 	@mkdir -p $(BIN_PATH)

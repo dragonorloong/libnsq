@@ -24,7 +24,7 @@ namespace NSQTOOL
     void CEventThread::NotifyWait()
     {
         pthread_mutex_lock(&m_mutex);
-        event_base_loopbreak(m_pEventBase); 
+        event_base_loopexit(m_pEventBase, NULL); 
         pthread_mutex_unlock(&m_mutex);
         CThread::NotifyWait();
     }
@@ -35,10 +35,10 @@ namespace NSQTOOL
         {
             CThread::ProcessCmd();
 
-            struct timeval sTm; 
-            sTm.tv_sec =10;
-            sTm.tv_usec = 1000;
-            event_base_loopexit(m_pEventBase, &sTm);	
+//            struct timeval sTm; 
+ //           sTm.tv_sec =10;
+  //          sTm.tv_usec = 1000;
+            //event_base_loopexit(m_pEventBase, &sTm);	
            // pthread_mutex_lock(&m_mutex);
             event_base_dispatch(m_pEventBase);
             //pthread_mutex_unlock(&m_mutex);

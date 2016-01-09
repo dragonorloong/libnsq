@@ -23,26 +23,27 @@ void ConsumerCallBack(int iProtocolId, const string &strMsgId, const string &str
 
 void NsqLogCallBack(int iLogLevel, const char *pLogMsg)
 {
-//    printf("%s\n", pLogMsg);
+    printf("%s\n", pLogMsg);
 }
 
 int main()
 {
     //线程个数，每个nsqd连接个数，日志级别，日志回调函数
-    CNsqThread::InitSuperServer(10, 200, LOG_ERROR, NsqLogCallBack);
+    CNsqThread::InitSuperServer(10, 200, LOG_DEBUG, NsqLogCallBack);
     //设置消费者，lookup host,lookup_port topic channel，消息回调函数 
-   // CMainThread::SetConsumer("10.10.200.130", 4161, "Login", "test", ConsumerCallBack);
+    CNsqThread::SetConsumer("127.0.0.1", 4161, "lhb", "test", ConsumerCallBack);
     //设置生产者,参数同上
-    CNsqThread::SetProducer("10.10.200.130", 4161, "Login", ConsumerCallBack);
+    CNsqThread::SetProducer("127.0.0.1", 4161, "lhb", ConsumerCallBack);
     // 启动服务
     //
 
     CNsqThread::StartSuperServer();
+//    sleep(100);
     int iCount = 0;
 	while (1)
 	{
         //生产消息
-       int iRet = CNsqThread::ProducerMsg("Login", "testdjfklsk");
+       int iRet = CNsqThread::ProducerMsg("lhb", "testdjfklsk");
        // sleep(10);
         //
         iCount++;

@@ -8,10 +8,10 @@ APP = bin_test
 APP_TYPE = BIN
 
 #Include
-INCLUDE =  -L/usr/local/lib64 -I3rd/libevent/lib/include -I3rd/jsoncpp/lib/include
-
+#INCLUDE =  -L/usr/local/lib64 -I3rd/libevent/lib/include -I3rd/jsoncpp/lib/include
+INCLUDE = 
 #Link lib
-LINK_LIB = -L./bin/ -lnsqclient 3rd/libevent/lib/lib/libevent.a -lrt  -lpthread -L3rd/jsoncpp/lib -ljsoncpp -g
+LINK_LIB = -L./bin/ -lnsqclient ./3rd_install/lib/libevent.a -lrt  -lpthread ./3rd_install/lib/libjsoncpp.a
 
 #Install Path
 INSTALL_PATH =
