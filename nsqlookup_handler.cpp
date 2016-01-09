@@ -10,8 +10,8 @@
 namespace NSQTOOL
 {
         CNsqLookupHandler::CNsqLookupHandler(int iCmdType, int iCmdId,
-                uint64_t iHandleId, CThread *pThread)
-                : CTcpHandler(iCmdType, iCmdId, iHandleId, pThread)
+                uint64_t iHandleId, CThread *pThread, int iConnType)
+                : CTcpHandler(iCmdType, iCmdId, iHandleId, pThread, iConnType)
         {
         }
 

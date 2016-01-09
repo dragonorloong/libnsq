@@ -8,8 +8,8 @@
 namespace NSQTOOL
 {
         CNsqdHandler::CNsqdHandler(int iCmdType, int iCmdId,
-                uint64_t iHandlerId, CThread *pThread)
-            :CTcpHandler(iCmdType, iCmdId, iHandlerId, pThread)
+                uint64_t iHandlerId, CThread *pThread, int iConnType)
+            :CTcpHandler(iCmdType, iCmdId, iHandlerId, pThread, iConnType)
         {
 
         }

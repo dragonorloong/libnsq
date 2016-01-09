@@ -13,7 +13,7 @@ namespace NSQTOOL
     {
     public: 
         CNsqdHandler(int iCmdType, int iCmdId, 
-                uint64_t iHandleId, CThread *pThread);
+                uint64_t iHandleId, CThread *pThread, int iConnType);
         virtual void OnConnect();
         virtual void OnError(int iErrorNo);
         virtual int ProcessRead();

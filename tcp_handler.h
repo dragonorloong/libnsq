@@ -15,7 +15,7 @@ namespace NSQTOOL
     {
     public: 
         CTcpHandler(int iCmdType, int iCmdId,
-                uint64_t iHandlerId, CThread *pThread);
+                uint64_t iHandlerId, CThread *pThread, int iConnType);
         ~CTcpHandler();
 
         virtual void OnConnect();
@@ -30,6 +30,7 @@ namespace NSQTOOL
         virtual void TcpRead(CCommand *pCmd);
         virtual void TcpDelete(CCommand *pCmd);
         void SendData(const char *pData, int32_t iLength);
+        void SetTimeout();
 
         void SetBufferevent(bufferevent *pBufevt)
         {
@@ -45,6 +46,7 @@ namespace NSQTOOL
         CProtocol *m_pProtocol;
         int m_iCmdType;
         int m_iCmdId;
+        int m_iConnType;
         bufferevent *m_pBufevt;
         string m_strHost;
         uint16_t m_iPort;

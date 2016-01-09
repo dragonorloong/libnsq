@@ -12,7 +12,7 @@ namespace NSQTOOL
     {
     public: 
         CNsqLookupHandler(int iCmdType, int iCmdId,
-                uint64_t iHandleId, CThread *pThread);
+                uint64_t iHandleId, CThread *pThread, int iConnType);
         virtual void OnConnect();
         virtual int ProcessRead();
         void ProcessCmd(CCommand *pCmd);

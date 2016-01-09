@@ -52,7 +52,6 @@ namespace NSQTOOL
     {
         if (iLength == 0 && m_strStream.empty())    
         {
-            // "HTTP/1.1 200 OK"响应头有19个字节
             return 19; 
         }
 

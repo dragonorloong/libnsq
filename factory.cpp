@@ -10,6 +10,7 @@
 #include "listen_handler.h"
 #include "nsqd_handler.h"
 #include "nsqlookup_handler.h"
+#include "common.h"
 
 namespace NSQTOOL
 {
@@ -67,12 +68,12 @@ namespace NSQTOOL
             case NSQLOOKUP_TYPE:
             {
                 return new CNsqLookupHandler(iCmdType, iCmdId, 
-                        iHandlerId, pThread);
+                        iHandlerId, pThread, ESHORTCONNECT);
             }
             case NSQD_TYPE:
             {
                 return new CNsqdHandler(iCmdType, iCmdId, 
-                        iHandlerId, pThread);
+                        iHandlerId, pThread, ELONGCONNECT);
             }
             default:
             {

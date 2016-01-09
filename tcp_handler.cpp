@@ -3,14 +3,16 @@
 #include "protocol.h"
 #include <stdio.h>
 #include <string.h>
+#include "common.h"
 
 namespace NSQTOOL
 {
         CTcpHandler::CTcpHandler(int iCmdType, int iCmdId,
-                uint64_t iHandlerId, CThread *pThread)
+                uint64_t iHandlerId, CThread *pThread, int iConnType)
                 :CHandler(iHandlerId, pThread)
                 , m_iCmdType(iCmdType)
                 , m_iCmdId(iCmdId)
+                , m_iConnType(iConnType)
         {
             m_pProtocol = CSingletonNsqFactory::GetInstance()->GenProtocol(
                     iCmdType, iCmdId); 
@@ -92,14 +94,25 @@ namespace NSQTOOL
         {
             CTcpDelCommand *pDelCmd = dynamic_cast<CTcpDelCommand *>(pCmd);
 
+            if (pDelCmd->m_iErrorType & BEV_EVENT_TIMEOUT) 
+            {  
+                NsqLogPrintf(LOG_ERROR, "Timed out\n");
+            }  
+            else if (pDelCmd->m_iErrorType & BEV_EVENT_EOF) 
+            {  
+                NsqLogPrintf(LOG_ERROR, "connection closed\n");  
+            }  
+            else if (pDelCmd->m_iErrorType & BEV_EVENT_ERROR) 
+            {  
+                NsqLogPrintf(LOG_ERROR, "some other error\n");  
+            }  
             if (pDelCmd->m_iErrorType & BEV_EVENT_CONNECTED)
             {
                 OnConnect();
+                return;
             }
-            else
-            {
-                OnError(pDelCmd->m_iErrorType); 
-            }
+
+            OnError(pDelCmd->m_iErrorType); 
         }
 
         void CTcpHandler::SendData(const char *pData, int32_t iLength)
@@ -111,6 +124,24 @@ namespace NSQTOOL
             {
                  
             }
+        }
+
+        void CTcpHandler::SetTimeout()
+        {
+            struct timeval sTimeval;
+
+            if (m_iConnType == ESHORTCONNECT)
+            {
+               sTimeval.tv_sec = g_iShortConnectTimeout / 1000000;
+               sTimeval.tv_usec = g_iShortConnectTimeout % 1000000;
+            }
+            else
+            {
+               sTimeval.tv_sec = g_iLongConnectTimeout / 1000000;
+               sTimeval.tv_usec = g_iLongConnectTimeout % 1000000;
+            }
+
+            bufferevent_set_timeouts(m_pBufevt, &sTimeval, &sTimeval);  
         }
 
         void CTcpHandler::TcpSend(CCommand *pCmd)
@@ -131,7 +162,7 @@ namespace NSQTOOL
 
         void CTcpHandler::TcpConnect(CCommand *pCmd)
         {
-	    NsqLogPrintf(LOG_DEBUG, "TcpConnect\n");
+	        NsqLogPrintf(LOG_DEBUG, "TcpConnect\n");
             CTcpConnectCommand *pConnectCmd = dynamic_cast<CTcpConnectCommand *>(pCmd);
             m_strHost = pConnectCmd->m_strHost;
             m_iPort = pConnectCmd->m_iPort;
@@ -142,7 +173,7 @@ namespace NSQTOOL
             sAddr.sin_family = AF_INET;
 
             CNetThread *pThread = dynamic_cast<CNetThread *>(GetThread()); 
-            m_pBufevt = bufferevent_socket_new(pThread->GetEventBase(), -1, 0);
+            m_pBufevt = bufferevent_socket_new(pThread->GetEventBase(), -1, BEV_OPT_THREADSAFE);
             int32_t iRet = bufferevent_socket_connect(m_pBufevt, (sockaddr*)&sAddr, sizeof(sockaddr_in));
              
             if (iRet != 0)
@@ -164,6 +195,8 @@ namespace NSQTOOL
             //设置读入最低水位，防止无效回调
             bufferevent_setwatermark(m_pBufevt, EV_READ, 
                                      OnRead(NULL, 0), 0);
+
+            SetTimeout();
         }
         
 
@@ -177,18 +210,20 @@ namespace NSQTOOL
             CTcpAddCommand *pConnectCmd = dynamic_cast<CTcpAddCommand *>(pCmd);
             CEventThread *pThread = dynamic_cast<CEventThread *>(GetThread()); 
             m_pBufevt = bufferevent_socket_new(pThread->GetEventBase(), 
-                    pConnectCmd->m_iFd, 0);
+                    pConnectCmd->m_iFd, BEV_OPT_THREADSAFE);
             bufferevent_setcb(m_pBufevt, CNetThread::OnStaticRead, NULL, CNetThread::OnStaticError, pAddr);
             bufferevent_enable(m_pBufevt, EV_READ|EV_WRITE|EV_PERSIST|EV_ET);		
             bufferevent_setwatermark(m_pBufevt, EV_READ, 
                                       OnRead(NULL, 0), 0);
             OnConnect();
             //告诉listen线程
+            SetTimeout();
         }
 
         void CTcpHandler::ProcessCmd(CCommand *pCmd)
         {
-		NsqLogPrintf(LOG_DEBUG, "CTcpHandler::ProcessCmd ProcessCmd Type = %d", pCmd->GetCmdType());
+		    NsqLogPrintf(LOG_DEBUG, "CTcpHandler::ProcessCmd ProcessCmd Type = %d", pCmd->GetCmdType());
+
             switch(pCmd->GetCmdType())
             {
                 case TCP_CONNECT_TYPE:
