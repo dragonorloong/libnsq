@@ -1,5 +1,5 @@
 #source file
-SRC = command.cpp net_thread.cpp thread.cpp timer_thread.cpp  protocol.cpp  http_protocol.cpp  handler.cpp tcp_handler.cpp listen_handler.cpp event_thread.cpp common.cpp factory.cpp
+SRC = command.cpp net_thread.cpp thread.cpp timer_thread.cpp  protocol.cpp  http_protocol.cpp  handler.cpp tcp_handler.cpp listen_handler.cpp event_thread.cpp common.cpp factory.cpp main_thread.cpp
 
 #Application name
 APP = nsqclient

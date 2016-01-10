@@ -7,7 +7,7 @@
 
 #ifndef _NSQ_THREAD_H
 #define _NSQ_THREAD_H
-#include "thread.h"
+#include "main_thread.h"
 #include "handler.h"
 #include "tcp_handler.h"
 #include "nsqlookup_protocol.h"
@@ -37,7 +37,7 @@ namespace NSQTOOL
         BIZCALLBACK m_funcCallBack;
     };
 
-    class CNsqThread:public CThread
+    class CNsqThread:public CMainThread
     {
     public:
         enum MAINTHREADTIMER
@@ -46,7 +46,7 @@ namespace NSQTOOL
         };
 
         CNsqThread(int iThreadType, int iThreadId)
-           : CThread(iThreadType, iThreadId)
+           : CMainThread(iThreadType, iThreadId)
         {
         
         }
