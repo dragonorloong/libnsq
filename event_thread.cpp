@@ -7,12 +7,14 @@
  ************************************************************************/
 
 #include "event_thread.h"
+#include "event2/thread.h"
 
 namespace NSQTOOL
 {
     CEventThread::CEventThread(int32_t iThreadType, int32_t iThreadId)
         :CThread(iThreadType, iThreadId)
     {
+        evthread_use_pthreads();
         m_pEventBase = event_base_new();			
     }
 

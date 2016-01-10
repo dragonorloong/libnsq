@@ -43,20 +43,31 @@ void CTimerThread::OnStaticTimeOut(int iHandle, short iEvent, void *pArg)
 void CTimerThread::OnTimeOut(int iHandle, short iEvent, void *pArg)
 {
     pthread_mutex_lock(&m_mutex);
+
     CTimerAddCommand  *pTimerAddCommand = (CTimerAddCommand *)pArg;
+
     char buff[64] = {0};
-    snprintf(buff, sizeof(buff), "%d_%d_%d", 
-            pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadType, pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadId, pTimerAddCommand->m_iTimerType);
+    snprintf(buff, sizeof(buff), "%d_%d_%d"
+            , pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadType
+            , pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadId
+            , pTimerAddCommand->m_iTimerType);
+
 	NsqLogPrintf(LOG_DEBUG, "OnTimerOut:%s\n", buff);
-    
-    CCmdAddr cAddr;
-    cAddr.m_cDstAddr.m_iThreadType = pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadType;
-    cAddr.m_cDstAddr.m_iThreadId = pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadId;
-    cAddr.m_cDstAddr.m_iHandlerId = pTimerAddCommand->GetAddr().m_cSrcAddr.m_iHandlerId;
+
+    if (GetIntervalNow(&(pTimerAddCommand->m_cUpdateTime)) > g_iThreadDeadLockTime)
+    {
+        NsqLogPrintf(LOG_ERROR, "Check Dead Lock Time Out, ThreadType = %d, ThreadId = %d, HandlerId = %d"
+               , pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadType
+               , pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadId
+               , pTimerAddCommand->GetAddr().m_cSrcAddr.m_iHandlerId); 
+    }
 
     CCommand *pCmd = new CCommand(pTimerAddCommand->m_iTimerType, -1);
-    pCmd->SetAddr(cAddr);
-    CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
+    PostRemoteCmd(pCmd
+            , pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadType
+            , pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadId
+            , pTimerAddCommand->GetAddr().m_cSrcAddr.m_iHandlerId
+            , -1);
 
     if ((pTimerAddCommand->m_iPersist == 0) && (m_mapTimer.find(buff) != m_mapTimer.end()))
     {
@@ -72,12 +83,20 @@ void CTimerThread::OnTimeOut(int iHandle, short iEvent, void *pArg)
 void CTimerThread::TimerAdd(CCommand *pCmd)
 {
     CTimerAddCommand *pTimerAddCommand = dynamic_cast<CTimerAddCommand *>(pCmd);
-    event *pEvent = event_new(m_pEventBase, -1, EV_PERSIST, OnStaticTimeOut,pTimerAddCommand);
-    evtimer_add(pEvent, &(pTimerAddCommand->m_cTimeval));
-
     char buff[64] = {0};
     snprintf(buff, sizeof(buff), "%d_%d_%d", 
             pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadType, pTimerAddCommand->GetAddr().m_cSrcAddr.m_iThreadId, pTimerAddCommand->m_iTimerType);
+
+    if (m_mapTimer.find(buff) != m_mapTimer.end())
+    {
+       gettimeofday(&m_mapTimer[buff]->m_cUpdateTime, NULL);  
+       delete pTimerAddCommand;
+       return ;
+    }
+
+    event *pEvent = event_new(m_pEventBase, -1, EV_PERSIST, OnStaticTimeOut,pTimerAddCommand);
+    evtimer_add(pEvent, &(pTimerAddCommand->m_cTimeval));
+
 	NsqLogPrintf(LOG_DEBUG, "TimerAdd:%s\n", buff);
     pTimerAddCommand->m_pEvent = pEvent;
     pTimerAddCommand->m_pThread = this;

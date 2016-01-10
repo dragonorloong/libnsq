@@ -45,7 +45,7 @@ namespace NSQTOOL
     public:
         enum MAINTHREADTIMER
         {
-            LOOKUP_TIMER = 1,
+            LOOKUP_TIMER = 2,
         };
 
         CNsqThread(int iThreadType, int iThreadId)

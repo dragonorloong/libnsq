@@ -17,6 +17,11 @@ namespace NSQTOOL
 	class CThread
 	{
 	public:
+        enum ETHREADTIMER
+        {
+            KEEPALIVE_TIMER = 1, 
+        };
+
 		CThread(int32_t iThreadType, int32_t iThreadId);
 		virtual ~CThread();
 
@@ -31,6 +36,15 @@ namespace NSQTOOL
 		virtual void RealRun();
         virtual void DestoryHandler(uint64_t iHandleId);
         virtual void NotifyWait();
+
+        void RegisterKeepaliveTimer();
+        void OnKeepAlive();
+
+        void SendRemoteCmd(CCommand *pCmd, int iDstThreadType
+            , int iDstThreadId, int iDstHandlerId, int iSrcHandlerId);
+
+        void PostRemoteCmd(CCommand *pCmd, int iDstThreadType
+            , int iDstThreadId, int iDstHandlerId, int iSrcHandlerId);
 
     protected:
 		virtual void RealProcessCmd(CCommand *pCmd);

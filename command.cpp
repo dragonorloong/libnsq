@@ -4,12 +4,13 @@ namespace NSQTOOL
     CCommand::CCommand(int32_t iCmdType, int32_t iCmdId)
         :m_iCmdType(iCmdType), m_iCmdId(iCmdId), m_pLData(NULL), m_pRData(NULL)
     {
-
+       gettimeofday(&m_cTimeBegin, NULL);  
     }
 
     //不负责释放
     CCommand::~CCommand()
     {
+
     }
 
     void CCommand::SetCmdType(int32_t iCmdType)
@@ -56,5 +57,16 @@ namespace NSQTOOL
     {
         m_cAddr = cCmdAddr;	
     }	
+
+    int CCommand::CheckTimeout()
+    {
+        int64_t iProcessTimeMs = GetIntervalNow(&m_cTimeBegin);
+        if (iProcessTimeMs >  g_iCmdProcessTime)
+        {
+            return 0; 
+        }
+
+        return  -1;
+    }
 
 };

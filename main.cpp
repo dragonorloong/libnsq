@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "nsq_thread.h"
+#include <stdlib.h>
 using namespace std;
 using namespace NSQTOOL;
 
@@ -29,16 +30,18 @@ void NsqLogCallBack(int iLogLevel, const char *pLogMsg)
 int main()
 {
     //线程个数，每个nsqd连接个数，日志级别，日志回调函数
-    CNsqThread::InitSuperServer(10, 200, LOG_DEBUG, NsqLogCallBack);
+    CNsqThread::InitSuperServer(1, 2, LOG_DEBUG, NsqLogCallBack);
     //设置消费者，lookup host,lookup_port topic channel，消息回调函数 
     CNsqThread::SetConsumer("127.0.0.1", 4161, "lhb", "test", ConsumerCallBack);
     //设置生产者,参数同上
-    CNsqThread::SetProducer("127.0.0.1", 4161, "lhb", ConsumerCallBack);
+//    CNsqThread::SetProducer("127.0.0.1", 4161, "lhb", ConsumerCallBack);
     // 启动服务
     //
 
     CNsqThread::StartSuperServer();
-//    sleep(100);
+    CNsqThread::StopSuperServer();
+    sleep(10);
+    exit(0);
     int iCount = 0;
 	while (1)
 	{
@@ -57,6 +60,5 @@ int main()
         }
 	}
 
-    CNsqThread::StopSuperServer();
 }
 

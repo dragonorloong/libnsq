@@ -64,10 +64,10 @@ namespace NSQTOOL
     void CNsqThread::StartSuperServer()
     {
         CThreadMgrSingleton::GetInstance()->RegisterThreadPool(
-                new CThreadPool(NET_THREAD_TYPE, m_iThreadNum));
+                new CThreadPool(TIMER_THREAD_TYPE, 1));
 
         CThreadMgrSingleton::GetInstance()->RegisterThreadPool(
-                new CThreadPool(TIMER_THREAD_TYPE, 1));
+                new CThreadPool(NET_THREAD_TYPE, m_iThreadNum));
 
         CThreadMgrSingleton::GetInstance()->RegisterThreadPool(
                 new CThreadPool(NSQ_THREAD_TYPE, 1));

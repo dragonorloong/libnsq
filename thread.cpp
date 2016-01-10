@@ -18,6 +18,44 @@ namespace NSQTOOL
         m_iThreadId = iThreadId;
         NsqLogPrintf(LOG_DEBUG, "Init ThreadType = %d, iThreadId = %d\n", iThreadType, iThreadId);
         m_iHandleIdInc = 0;
+
+
+        if (iThreadType != TIMER_THREAD_TYPE)
+        {
+            RegisterKeepaliveTimer();     
+        }
+    }
+
+    void CThread::RegisterKeepaliveTimer()
+    {
+        struct timeval cTimeval = {5, 0};
+        CTimerAddCommand *pCmd = new CTimerAddCommand(cTimeval, 1, KEEPALIVE_TIMER);
+        PostRemoteCmd(pCmd, TIMER_THREAD_TYPE, 0, -1, -1);
+    }
+
+    void CThread::OnKeepAlive()
+    {
+        NsqLogPrintf(LOG_DEBUG, "OnKeepAlive");
+        list<CCommand *>::iterator iter = m_lstCmd.begin();
+
+        for (; iter != m_lstCmd.end();)
+        {
+            if ((*iter)->CheckTimeout() == 0)
+            {
+                //超时直接删除
+                NsqLogPrintf(LOG_ERROR, "Command Process Time Out, CmdType = %d, CmdId = %d"
+                        , (*iter)->GetCmdType()
+                        , (*iter)->GetCmdId());
+
+                delete (*iter);
+                iter = m_lstCmd.erase(iter);
+                continue;
+            }
+
+            break;
+        }
+
+        RegisterKeepaliveTimer();
     }
     
     CThread::~CThread()
@@ -70,7 +108,44 @@ namespace NSQTOOL
             NotifyWait();
         }
 
+        if (m_lstCmd.size() > g_iCmdQueueLength)
+        {
+            NsqLogPrintf(LOG_ERROR, "cmd queue is full"); 
+        }
+
         pthread_mutex_unlock(&m_mutex);
+    }
+
+    void CThread::SendRemoteCmd(CCommand *pCmd, int iDstThreadType
+            , int iDstThreadId, int iDstHandlerId, int iSrcHandlerId)
+    { 
+        CCmdAddr cCmdAddr;
+        cCmdAddr.m_cSrcAddr.m_iThreadType = m_iThreadType;
+        cCmdAddr.m_cSrcAddr.m_iThreadId = m_iThreadId;
+        cCmdAddr.m_cSrcAddr.m_iHandlerId = iSrcHandlerId;
+
+        cCmdAddr.m_cDstAddr.m_iThreadType = iDstThreadType;
+        cCmdAddr.m_cDstAddr.m_iThreadId = iDstThreadId;
+        cCmdAddr.m_cDstAddr.m_iHandlerId = iDstHandlerId;
+
+        pCmd->SetAddr(cCmdAddr);
+        CThreadMgrSingleton::GetInstance()->SendCmd(pCmd);
+    }
+
+    void CThread::PostRemoteCmd(CCommand *pCmd, int iDstThreadType
+            , int iDstThreadId, int iDstHandlerId, int iSrcHandlerId)
+    { 
+        CCmdAddr cCmdAddr;
+        cCmdAddr.m_cSrcAddr.m_iThreadType = m_iThreadType;
+        cCmdAddr.m_cSrcAddr.m_iThreadId = m_iThreadId;
+        cCmdAddr.m_cSrcAddr.m_iHandlerId = iSrcHandlerId;
+
+        cCmdAddr.m_cDstAddr.m_iThreadType = iDstThreadType;
+        cCmdAddr.m_cDstAddr.m_iThreadId = iDstThreadId;
+        cCmdAddr.m_cDstAddr.m_iHandlerId = iDstHandlerId;
+
+        pCmd->SetAddr(cCmdAddr);
+        CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
     }
 
     void CThread::NotifyWait()
@@ -80,10 +155,16 @@ namespace NSQTOOL
     
     void CThread::RealProcessCmd(CCommand *pCmd)
     {
+        NsqLogPrintf(LOG_DEBUG, "CThread::RealProcessCmd CmdType = %d", pCmd->GetCmdType());
+
         if (pCmd->GetCmdType() == STOP_TYPE)
         {
             m_lstCmd.clear();	
             m_bStop = true;
+        }
+        else if (pCmd->GetCmdType() == KEEPALIVE_TIMER && pCmd->GetAddr().m_cDstAddr.m_iHandlerId == -1)
+        {
+            OnKeepAlive(); 
         }
         else
         {

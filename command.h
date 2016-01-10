@@ -4,48 +4,11 @@
 #include <pthread.h>
 #include <string>
 #include "event2/event.h" 
+#include "common.h"
+#include <time.h>
 
-using namespace std;
 namespace NSQTOOL
 {
-    void NsqLogPrintf(int iLogLevel, const char *pFormat, ...);
-
-	enum EInternalCmdType
-	{
-		STOP_TYPE = -1,
-		TCP_CONNECT_TYPE = -2,
-		TCP_LISTEN_ADD_TYPE = -3,
-        TCP_LISTEN_DEL_TYPE = -4,
-        TCP_LISTEN_ACCEPT_TYPE = -11,
-		TCP_DEL_TYPE = -5,
-		TCP_ADD_TYPE = -6,
-		TCP_SEND_TYPE = -7,
-        TCP_READ_TYPE = -8, 
-        TIMER_ADD_TYPE = -9,
-        TIMER_DEL_TYPE = -10
-	};
-
-    enum EInternalThreadType
-    {
-        NET_THREAD_TYPE = -1,
-        LISTEN_THREAD_TYPE = -2,
-        TIMER_THREAD_TYPE = -3,
-        NSQ_THREAD_TYPE = -4,
-    };
-
-    enum ENsqProtocolType
-    {
-        NSQLOOKUP_TYPE = -1,
-        NSQD_TYPE = -2,
-    };
-
-    enum LOG_LEVEL
-    {
-        LOG_DEBUG = -3,
-        LOG_ERROR = -2
-    };
-
-
     struct CAddr
     {
         int32_t m_iThreadType;
@@ -84,12 +47,15 @@ namespace NSQTOOL
         int32_t GetCmdId();
 		CCmdAddr &GetAddr();
 		void SetAddr(CCmdAddr &cCmdAddr);
+        int CheckTimeout();
+
 	private:
 		int32_t m_iCmdType;
         int32_t m_iCmdId;
 		void *m_pLData;
 		void *m_pRData;
 		CCmdAddr m_cAddr;
+        struct timeval m_cTimeBegin;
 	}; 
 
     class CTcpConnectCommand:public CCommand
@@ -213,11 +179,12 @@ namespace NSQTOOL
             , m_iPersist(iPersist)
             , m_iTimerType(iTimerType)
         {
-             
+            gettimeofday(&m_cUpdateTime, NULL);  
         }
 
     public:
         struct timeval m_cTimeval;
+        struct timeval m_cUpdateTime;
         int m_iPersist;
         int m_iTimerType;
         event *m_pEvent;
