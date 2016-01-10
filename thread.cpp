@@ -174,7 +174,7 @@ namespace NSQTOOL
            }
            else
            {
-                CHandler *pHandler = CSingletonNsqFactory::GetInstance()->GenHandler(pCmd->GetCmdType(),
+                CHandler *pHandler = g_pFactory->GenHandler(pCmd->GetCmdType(),
                                     pCmd->GetCmdId(), 
                                     GetHandlerId(), this);
                 
@@ -284,7 +284,7 @@ namespace NSQTOOL
         for (int i = 0; i < iThreadNum; ++i)
         {
             NsqLogPrintf(LOG_DEBUG, "ThreadPool ThreadType = %d, iThreadId = %d\n", iThreadType, i);
-            CThread *pThread = CSingletonNsqFactory::GetInstance()->GenThread(iThreadType, i); 
+            CThread *pThread = g_pFactory->GenThread(iThreadType, i); 
             m_vecThread.push_back(pThread);  
         }
     }

@@ -19,5 +19,5 @@ mv ${CUR_DIR}/3rd_install/libjsoncpp.a ${CUR_DIR}/3rd_install/lib/
 cd ../../../../
 CUR_DIR=$(cd `dirname $0`;pwd)
 make
-make -f Makefile.bin clean
-make -f Makefile.bin
+cd nsq_test
+make 

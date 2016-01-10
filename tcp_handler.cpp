@@ -14,7 +14,7 @@ namespace NSQTOOL
                 , m_iCmdId(iCmdId)
                 , m_iConnType(iConnType)
         {
-            m_pProtocol = CSingletonNsqFactory::GetInstance()->GenProtocol(
+            m_pProtocol = g_pFactory->GenProtocol(
                     iCmdType, iCmdId); 
         }
 

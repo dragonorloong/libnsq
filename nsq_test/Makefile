@@ -1,5 +1,5 @@
 #source file
-SRC = main.cpp
+SRC = nsq_factory.cpp nsqd_protocol.cpp nsqlookup_protocol.cpp nsqd_handler.cpp nsqlookup_handler.cpp nsq_thread.cpp main.cpp
 
 #Application name
 APP = bin_test
@@ -9,9 +9,9 @@ APP_TYPE = BIN
 
 #Include
 #INCLUDE =  -L/usr/local/lib64 -I3rd/libevent/lib/include -I3rd/jsoncpp/lib/include
-INCLUDE = 
+INCLUDE = -I../
 #Link lib
-LINK_LIB = -L./bin/ -lnsqclient ./3rd_install/lib/libevent.a -lrt  -lpthread ./3rd_install/lib/libjsoncpp.a ./3rd_install/lib/libevent_pthreads.a
+LINK_LIB = -L../bin/ -lnsqclient ../3rd_install/lib/libevent.a -lrt  -lpthread ../3rd_install/lib/libjsoncpp.a ../3rd_install/lib/libevent_pthreads.a
 
 #Install Path
 INSTALL_PATH =

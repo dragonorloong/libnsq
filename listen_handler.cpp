@@ -44,15 +44,8 @@ namespace NSQTOOL
     void CListenHandler::TcpListenAccept(CCommand *pCmd)
     {
         CTcpListenAcceptCommand *pListenAccecptCommand = dynamic_cast<CTcpListenAcceptCommand *>(pCmd); 
-        CCmdAddr cCmdAddr;
-        cCmdAddr.m_cSrcAddr.m_iThreadType = GetThread()->GetThreadType();
-        cCmdAddr.m_cSrcAddr.m_iThreadId = GetThread()->GetThreadId();
-        cCmdAddr.m_cSrcAddr.m_iHandlerId = GetHandlerId();
-        cCmdAddr.m_cDstAddr.m_iThreadType = NET_THREAD_TYPE;
-
         CTcpAddCommand *pTcpAddCommand = new CTcpAddCommand(pListenAccecptCommand->m_iAcceptFd, m_iCmdId);
-        pTcpAddCommand->SetAddr(cCmdAddr); 
-        CThreadMgrSingleton::GetInstance()->PostCmd(pTcpAddCommand);
+        GetThread()->PostRemoteCmd(pTcpAddCommand, NET_THREAD_TYPE, -1, -1, GetHandlerId());
     }
 
     void CListenHandler::ProcessCmd(CCommand *pCmd)

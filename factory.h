@@ -7,6 +7,7 @@ namespace NSQTOOL
     class CThread;
     class CProtocol;
     class CHandler;
+
     class CFactory
     {
     public:
@@ -14,24 +15,12 @@ namespace NSQTOOL
         virtual CProtocol *GenProtocol(int iCmdType, int iCmdId) = 0;
         virtual CHandler *GenHandler(int iCmdType, int iCmdId, 
                 int iHandlerId, CThread *pThread)=0;
+        static void SetFactory(CFactory *pFactory);
     };
 
-    class CNsqFactory:public CFactory
-    {
-    friend class CSingleton<CNsqFactory>;
+ //   class CNsqFactory;
+ //   typedef CSingleton<CFactory *> CSingletonNsqFactory;
 
-    private:
-        CNsqFactory()
-        {
-        
-        }
-
-    public:
-        CThread *GenThread(int iThreadType, int iThreadId);
-        CProtocol *GenProtocol(int iCmdType, int iCmdId);
-        CHandler *GenHandler(int iCmdType, int iCmdId, int iHandlerId, CThread *pThread);
-    };
-
-    typedef CSingleton<CNsqFactory> CSingletonNsqFactory;
+    extern CFactory *g_pFactory;
 };
 #endif

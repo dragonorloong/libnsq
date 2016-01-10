@@ -14,6 +14,7 @@
 #include <iostream>
 #include <vector>
 #include <stdarg.h>
+#include "nsq_factory.h"
 
 namespace NSQTOOL
 {
@@ -158,6 +159,8 @@ namespace NSQTOOL
                                     LOGCALLBACK pLogFunc
                                     )
     {
+        CNsqFactory *pFactory = new CNsqFactory();
+        CFactory::SetFactory(pFactory);
         m_iThreadNum = iThreadNum;
         m_iConnectNum = iConnectNum;
         m_iLogLevel = iLogLevel;
