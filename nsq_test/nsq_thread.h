@@ -27,7 +27,6 @@ namespace NSQTOOL
     typedef void (*BIZCALLBACK)(int, const string&, const string&);
 
 
-    typedef void (*LOGCALLBACK)(int, const char *pLogMsg);
 
     struct CNsqLookupContext
     {
@@ -37,8 +36,6 @@ namespace NSQTOOL
         string m_strChannel;
         BIZCALLBACK m_funcCallBack;
     };
-
-    void NsqLogPrintf(int iLogLevel, const char *pFormat, ...);
 
     class CNsqThread:public CThread
     {
@@ -105,9 +102,6 @@ namespace NSQTOOL
         static int m_iConnectNum;
         static int m_iThreadNum;
         static CLock m_cLock;
-    public:
-        static LOGCALLBACK m_pLogFunc;
-        static int m_iLogLevel;
     };
 };
 

@@ -64,5 +64,10 @@ namespace NSQTOOL
         LOG_ERROR = -2
     };
 
+    typedef void (*LOGCALLBACK)(int, const char *pLogMsg);
+    extern void NsqLogPrintf(int iLogLevel, const char *pFormat, ...);
+
+    extern LOGCALLBACK g_pLogFunc;
+    extern int g_iLogLevel;
 };
 #endif

@@ -32,4 +32,22 @@ namespace NSQTOOL
 
         return iCurTimeMs - iInTimeMs;
     }
+
+    LOGCALLBACK g_pLogFunc = NULL;
+    int g_iLogLevel;
+
+    void NsqLogPrintf(int iLogLevel, const char *pFormat, ...)
+    {
+        if (iLogLevel < g_iLogLevel || g_pLogFunc == NULL)
+        {
+            return ;
+        }
+
+        va_list va;
+        va_start(va, pFormat);
+        char buff[256] = {0};
+        vsnprintf(buff, sizeof(buff), pFormat, va);
+        va_end(va);
+        g_pLogFunc(iLogLevel, buff);
+    }
 };

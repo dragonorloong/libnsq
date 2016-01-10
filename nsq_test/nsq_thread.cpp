@@ -98,24 +98,7 @@ namespace NSQTOOL
     map<string, CNsqLookupContext>  CNsqThread::m_mapLookupContext;
     int CNsqThread::m_iConnectNum = 2;
     CLock CNsqThread::m_cLock;
-    LOGCALLBACK CNsqThread::m_pLogFunc = NULL;
-    int CNsqThread::m_iLogLevel = LOG_DEBUG;
     int CNsqThread::m_iThreadNum = 1;
-
-    void NsqLogPrintf(int iLogLevel, const char *pFormat, ...)
-    {
-        if (iLogLevel < CNsqThread::m_iLogLevel || CNsqThread::m_pLogFunc == NULL)
-        {
-            return ;
-        }
-
-        va_list va;
-        va_start(va, pFormat);
-        char buff[256] = {0};
-        vsnprintf(buff, sizeof(buff), pFormat, va);
-        va_end(va);
-        CNsqThread::m_pLogFunc(iLogLevel, buff);
-    }
 
     void CNsqThread::SetProducer(const string &strLookupHost,
                                 uint16_t iLookupPort, 
@@ -163,8 +146,8 @@ namespace NSQTOOL
         CFactory::SetFactory(pFactory);
         m_iThreadNum = iThreadNum;
         m_iConnectNum = iConnectNum;
-        m_iLogLevel = iLogLevel;
-        m_pLogFunc = pLogFunc;
+        g_iLogLevel = iLogLevel;
+        g_pLogFunc = pLogFunc;
         srand(::time(NULL));
     }
 
