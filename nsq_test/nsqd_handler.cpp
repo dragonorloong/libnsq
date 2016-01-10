@@ -4,6 +4,7 @@
 #include "nsq_thread.h"
 #include "nsqd_protocol.h"
 #include "net_thread.h"
+#include "nsq_command.h"
 
 namespace NSQTOOL
 {

@@ -2,6 +2,7 @@
 #define _NSQ_FACTORY_
 #include "singleton.h"
 #include "factory.h"
+#include "nsq_command.h"
 
 namespace NSQTOOL
 {

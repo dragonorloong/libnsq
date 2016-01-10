@@ -6,6 +6,7 @@
 #include "nsq_thread.h"
 #include "nsqlookup_protocol.h"
 #include <algorithm>
+#include "nsq_command.h"
 
 namespace NSQTOOL
 {

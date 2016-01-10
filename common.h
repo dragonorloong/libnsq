@@ -52,11 +52,6 @@ namespace NSQTOOL
         NSQ_THREAD_TYPE = -4,
     };
 
-    enum ENsqProtocolType
-    {
-        NSQLOOKUP_TYPE = -1,
-        NSQD_TYPE = -2,
-    };
 
     enum LOG_LEVEL
     {
