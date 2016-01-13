@@ -1,20 +1,20 @@
 #source file
-SRC = command.cpp net_thread.cpp thread.cpp timer_thread.cpp  protocol.cpp  http_protocol.cpp  handler.cpp tcp_handler.cpp listen_handler.cpp event_thread.cpp common.cpp factory.cpp main_thread.cpp
+SRC = http_factory.cpp http_handler.cpp  http_server.cpp main.cpp
 
 #Application name
-APP = nsqclient
+APP = bin_test
 
 #Application type BIN SO LIB
-APP_TYPE = LIB 
+APP_TYPE = BIN
 
 #Include
-INCLUDE = -I./3rd_install/include
-#-I/usr/local/include/json
-#Link lib 
-LINK_LIB = 
+#INCLUDE =  -L/usr/local/lib64 -I3rd/libevent/lib/include -I3rd/jsoncpp/lib/include
+INCLUDE = -I../ -I../3rd_install/include
+#Link lib
+LINK_LIB = -L../bin/ -lnsqclient ../3rd_install/lib/libevent.a -lrt  -lpthread ../3rd_install/lib/libjsoncpp.a ../3rd_install/lib/libevent_pthreads.a
 
 #Install Path
-INSTALL_PATH = 
+INSTALL_PATH =
 
 #Bin Path
 BIN_PATH = bin
@@ -26,7 +26,7 @@ OBJ_PATH = obj
 CXX = g++
 
 #Options
-CFLAGS = -pg  -g
+CFLAGS = -pg -g
 
 #Obj and bin directory Judge
 ifeq ($(strip $(BIN_PATH)),)
@@ -44,7 +44,7 @@ endif
 #Dest Splice
 ifeq "$(strip $(APP_TYPE))" "SO"
 	DEST=$(BIN_PATH)/lib$(APP).so
-	LINKER = $(CXX) -o $(DEST)
+	LINKER = $(CXX)  $(CFLAGS)  -o $(DEST)
 	CFLAGS+= -fPIC -shared
 else
 	ifeq "$(strip $(APP_TYPE))" "LIB"
@@ -53,7 +53,7 @@ else
 	else
 		ifeq "$(strip $(APP_TYPE))" "BIN"
 			DEST = $(BIN_PATH)/$(APP)
-			LINKER = $(CXX)  -o $(DEST) 
+			LINKER = $(CXX)  -o $(DEST)
 		endif
 	endif
 endif
@@ -78,15 +78,16 @@ install_all : all
 		cp -rf ${DEST}  ${INSTALL_PATH}/; \
 	fi
 
+include $(DEPS)
 
-all:init $(DEPS) $(DEST) 
+all:init  $(DEST)
 
 init:
 	@mkdir -p $(BIN_PATH)
 	@mkdir -p $(OBJ_PATH)
 
 $(DEST):$(OBJ)
-	$(LINKER)  $^ $(LINK_LIB)
+	$(LINKER) $(CFLAGS)  $^ $(LINK_LIB)
 
 $(OBJ):$(OBJ_PATH)/%.o:%.cpp
 	$(CXX) $(CFLAGS) $(INCLUDE) $< -c -o  $@ 											
@@ -97,9 +98,8 @@ $(DEPS):$(OBJ_PATH)/%.d:%.cpp
 	set -e;rm -f  $@;\
 	$(CXX) $(CFLAGS) -MM $(INCLUDE) $< > $@.$$$$;\
 	sed 's, \($*\)\.o[ :]*,\1.o $@ : , g'< $@.$$$$ > $@;\
-	rm -f $@.$$$$	   
+	rm -f $@.$$$$	
 
-include $(DEPS)
 
 clean:
 	-rm -f $(OBJ_PATH)/*.o  $(OBJ_PATH)/*.d $(DEST) \

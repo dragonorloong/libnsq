@@ -9,18 +9,15 @@ using namespace std;
 namespace NSQTOOL
 {
     class CTcpHandler;
-    class CNsqdHandler:public CTcpHandler
+    class CHttpHandler:public CTcpHandler
     {
     public: 
-        CNsqdHandler(int iCmdType, int iCmdId, 
+        CHttpHandler(int iCmdType, int iCmdId, 
                 uint64_t iHandleId, CThread *pThread, int iConnType);
         virtual void OnConnect();
         virtual void OnError(int iErrorNo);
         virtual int ProcessRead();
         void ProcessCmd(CCommand *pCmd);
-    private:
-        string m_strTopic;
-        string m_strChannel;
     };
 };
 #endif

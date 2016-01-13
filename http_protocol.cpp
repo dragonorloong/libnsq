@@ -7,6 +7,7 @@
 #include "http_protocol.h"
 #include <stdio.h>
 #include <string>
+#include "common.h"
 
 namespace NSQTOOL
 {
@@ -48,6 +49,103 @@ namespace NSQTOOL
         return m_strStream;
     }
 
+    int32_t CHttpRequest::Need(const char *pData, int32_t iLength)
+    {
+        if (iLength == 0 && m_strStream.empty())    
+        {
+            return 19; 
+        }
+
+        m_strStream.append(pData, iLength);
+
+        size_t iHeadEndPos = m_strStream.find("\r\n\r\n"); 
+
+        NsqLogPrintf(LOG_DEBUG, "recv data = %s", pData);
+
+        if (iHeadEndPos == std::string::npos)
+        {
+            return 1;
+        }
+        else
+        {
+            size_t iContentLengthPos = m_strStream.find("Content-Length:");
+
+            if (iContentLengthPos == std::string::npos)
+            {
+                size_t iResultBegin = m_strStream.find(" ");
+                size_t iResultEnd = m_strStream.find(" ", iResultBegin + 1);
+                m_strUrl = m_strStream.substr(iResultBegin + 1, iResultEnd - iResultEnd);
+                m_strBody = "";
+                m_iCurPkgLength = iHeadEndPos + 4;
+                return 0;
+            }
+
+            size_t iContentEndPos = m_strStream.find("\r\n", iContentLengthPos);
+
+            if (iContentEndPos == std::string::npos)
+            {
+                return 1;
+            }
+
+            std::string strBody = m_strStream.substr(iContentLengthPos + 15, iContentEndPos - iContentLengthPos - 15); 
+            int iBodyLength;
+            sscanf(strBody.c_str(), "%d", &iBodyLength);
+            int32_t iNeedLength = m_strStream.length() - iHeadEndPos - 4 - iBodyLength;
+
+            if (iNeedLength >= 0)
+            {
+                size_t iResultBegin = m_strStream.find(" ");
+                size_t iResultEnd = m_strStream.find(" ", iResultBegin + 1);
+                m_strUrl = m_strStream.substr(iResultBegin + 1, iResultEnd - iResultEnd);
+                m_strBody = m_strStream.substr(iHeadEndPos + 4, iBodyLength);
+                m_iCurPkgLength = iHeadEndPos + 4 + iBodyLength;
+                return 0;
+            }
+
+            return -iNeedLength;
+        }
+    }
+
+    void CHttpRequest::Decode()
+    {
+        
+    }
+
+    std::string &CHttpRequest::GetBody()
+    {
+        return m_strBody;
+    }
+
+
+    std::string &CHttpRequest::GetCurl()
+    {
+        return m_strUrl;
+    }
+
+    void CHttpResponse::SetResponse(const char *pResult, const char *pVersion)
+    {
+        m_strStream.append(pVersion);                
+        m_strStream.append(" ");                
+        m_strStream.append(pResult);
+        m_strStream.append("\r\n");
+        m_strStream.append("\r\n");
+    }
+
+    void CHttpResponse::SetBody(const char *pBody, int32_t iLength)
+    {
+
+    }
+
+    void CHttpResponse::SetContentLength(int32_t iLength)
+    {
+
+    }
+
+    std::string &CHttpResponse::Encode()
+    {
+        return m_strStream;    
+    }
+
     int32_t CHttpResponse::Need(const char *pData, int32_t iLength)
     {
         if (iLength == 0 && m_strStream.empty())    
@@ -72,7 +170,7 @@ namespace NSQTOOL
                 size_t iResultEnd = m_strStream.find(" ", iResultBegin + 1);
                 m_strResult = m_strStream.substr(iResultBegin + 1, iResultEnd - iResultEnd);
                 m_strBody = "";
-                m_iCurPkgLength = iHeadEndPos;
+                m_iCurPkgLength = iHeadEndPos + 4;
                 return 0;
             }
 
@@ -100,6 +198,11 @@ namespace NSQTOOL
 
             return -iNeedLength;
         }
+
+    }
+
+    void CHttpResponse::Decode()
+    {
 
     }
 

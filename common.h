@@ -16,7 +16,6 @@ namespace NSQTOOL
     extern int g_iCmdQueueLength;
 
     using namespace std;
-    void NsqLogPrintf(int iLogLevel, const char *pFormat, ...);
 
     //命令处理时间
     extern int g_iCmdProcessTime;

@@ -16,11 +16,18 @@ namespace NSQTOOL
                 uint64_t iHandlerId, CThread *pThread);
         ~CListenHandler();
 
-        virtual void OnError(int iErrorNo = 0);
+        virtual void OnError(int iErrorNo = 0)
+        {
+
+        }
+
         virtual void ProcessCmd(CCommand *pCmd);
 
         virtual void TcpListenAdd(CCommand *pCmd);
-        virtual void TcpListenDel(CCommand *pCmd); 
+        virtual void TcpListenDel(CCommand *pCmd)
+        {
+        }
+
         virtual void TcpListenAccept(CCommand *pCmd);
 
     protected:
