@@ -21,14 +21,16 @@ namespace NSQTOOL
         virtual void OnConnect();
         virtual void OnError(int iErrorNo);
         virtual int OnRead(const char *pData, int iLength);
+        virtual int OnWrite(int iLength);
         virtual int ProcessRead();
         virtual void ProcessCmd(CCommand *pCmd);
 
         virtual void TcpConnect(CCommand *pCmd);
         virtual void TcpSend(CCommand *pCmd);
         virtual void TcpAdd(CCommand *pCmd); 
-        virtual void TcpRead(CCommand *pCmd);
-        virtual void TcpDelete(CCommand *pCmd);
+        virtual void TcpRead();
+        virtual void TcpWrite();
+        virtual void TcpDelete(int iErrorType);
         void SendData(const char *pData, int32_t iLength);
         void SetTimeout();
 

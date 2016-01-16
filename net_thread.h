@@ -26,6 +26,7 @@ namespace NSQTOOL
 	public:
 	    CNetThread(int32_t iThreadType, int iThreadId);
 		static void OnStaticRead(struct bufferevent *pBufevt, void *arg);
+		static void OnStaticWrite(struct bufferevent *pBufevt, void *arg);
 		static void OnStaticError(struct bufferevent *pBufevt, 
                                 short iTemp, void *arg);
 	};

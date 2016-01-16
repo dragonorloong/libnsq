@@ -26,7 +26,7 @@ OBJ_PATH = obj
 CXX = g++
 
 #Options
-CFLAGS = -g  
+CFLAGS =   -g
 
 #Obj and bin directory Judge
 ifeq ($(strip $(BIN_PATH)),)

@@ -29,22 +29,17 @@ namespace NSQTOOL
         sAddr.sin_port = htons(pListenAddCmd->m_iPort);
         sAddr.sin_family = AF_INET;
 
-        CAddr *pAddr = new CAddr();
-        pAddr->m_iThreadType = GetThread()->GetThreadType();
-        pAddr->m_iThreadId = GetThread()->GetThreadId();
-        pAddr->m_iHandlerId = GetHandlerId();
-
-        m_pListener = evconnlistener_new_bind(pListenThread->GetEventBase(), CListenThread::OnStaticRead, pAddr, 
+        m_pListener = evconnlistener_new_bind(pListenThread->GetEventBase(), CListenThread::OnStaticRead, this, 
                 LEV_OPT_THREADSAFE|LEV_OPT_REUSEABLE|LEV_OPT_CLOSE_ON_FREE, 10,
                 (sockaddr*)&sAddr, sizeof(sockaddr_in));
 
 
     }
 
-    void CListenHandler::TcpListenAccept(CCommand *pCmd)
+    void CListenHandler::TcpListenAccept(int iAcceptFd, struct sockaddr *pAddr, int socklen)
     {
-        CTcpListenAcceptCommand *pListenAccecptCommand = dynamic_cast<CTcpListenAcceptCommand *>(pCmd); 
-        CTcpAddCommand *pTcpAddCommand = new CTcpAddCommand(pListenAccecptCommand->m_iAcceptFd, m_iCmdId);
+        //CTcpListenAcceptCommand *pListenAccecptCommand = dynamic_cast<CTcpListenAcceptCommand *>(pCmd); 
+        CTcpAddCommand *pTcpAddCommand = new CTcpAddCommand(iAcceptFd, m_iCmdId);
         GetThread()->PostRemoteCmd(pTcpAddCommand, NET_THREAD_TYPE, -1, -1, GetHandlerId());
     }
 
@@ -60,11 +55,6 @@ namespace NSQTOOL
             case TCP_LISTEN_DEL_TYPE:
             {
                 TcpListenDel(pCmd); 
-                break;
-            }
-            case TCP_LISTEN_ACCEPT_TYPE:
-            {
-                TcpListenAccept(pCmd); 
                 break;
             }
        }

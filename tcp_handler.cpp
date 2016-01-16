@@ -21,9 +21,6 @@ namespace NSQTOOL
         CTcpHandler::~CTcpHandler()
         {
             close(bufferevent_getfd(GetBufferevent()));
-            CAddr *pAddr;
-            bufferevent_getcb(GetBufferevent(), NULL, NULL, NULL, (void **)&pAddr);
-            delete pAddr;
             bufferevent_free(GetBufferevent()); 
             delete m_pProtocol;
            // CThread::DestoryHandler(iHandlerId);
@@ -65,12 +62,23 @@ namespace NSQTOOL
             return iNeed;
         }
 
+        int CTcpHandler::OnWrite(int iLength)
+        {
+            return 0; 
+        }
+
         int CTcpHandler::ProcessRead()
         {
              
         }
 
-        void CTcpHandler::TcpRead(CCommand *pCmd)
+        void CTcpHandler::TcpWrite()
+        {
+            int iLength = evbuffer_get_length(bufferevent_get_output(m_pBufevt));
+            OnWrite(iLength); 
+        }
+
+        void CTcpHandler::TcpRead()
         {
             //内存copy三次，太浪费，后续改进
             int iLength = evbuffer_get_length(bufferevent_get_input(m_pBufevt));
@@ -90,29 +98,27 @@ namespace NSQTOOL
             delete pData;
         }
 
-        void CTcpHandler::TcpDelete(CCommand *pCmd)
+        void CTcpHandler::TcpDelete(int iErrorType)
         {
-            CTcpDelCommand *pDelCmd = dynamic_cast<CTcpDelCommand *>(pCmd);
-
-            if (pDelCmd->m_iErrorType & BEV_EVENT_TIMEOUT) 
+            if (iErrorType & BEV_EVENT_TIMEOUT) 
             {  
                 NsqLogPrintf(LOG_ERROR, "Timed out\n");
             }  
-            else if (pDelCmd->m_iErrorType & BEV_EVENT_EOF) 
+            else if (iErrorType & BEV_EVENT_EOF) 
             {  
                 NsqLogPrintf(LOG_ERROR, "connection closed\n");  
             }  
-            else if (pDelCmd->m_iErrorType & BEV_EVENT_ERROR) 
+            else if (iErrorType & BEV_EVENT_ERROR) 
             {  
                 NsqLogPrintf(LOG_ERROR, "some other error\n");  
             }  
-            if (pDelCmd->m_iErrorType & BEV_EVENT_CONNECTED)
+            if (iErrorType & BEV_EVENT_CONNECTED)
             {
                 OnConnect();
                 return;
             }
 
-            OnError(pDelCmd->m_iErrorType); 
+            OnError(iErrorType); 
         }
 
         void CTcpHandler::SendData(const char *pData, int32_t iLength)
@@ -182,15 +188,8 @@ namespace NSQTOOL
                 return ;
             }
 
-            CAddr *pAddr = new CAddr();
-            pAddr->m_iThreadType = GetThread()->GetThreadType();
-            pAddr->m_iThreadId = GetThread()->GetThreadId();
-            pAddr->m_iHandlerId = GetHandlerId();
-		    NsqLogPrintf(LOG_DEBUG, "OnConnect ThreadType = %d, ThreadId = %d, HandlerId = %ld\n",
-				pAddr->m_iThreadType, pAddr->m_iThreadId, pAddr->m_iHandlerId);
-
-            bufferevent_setcb(m_pBufevt, CNetThread::OnStaticRead, NULL, CNetThread::OnStaticError, pAddr);
-            bufferevent_enable(m_pBufevt, EV_READ|EV_PERSIST);		
+            bufferevent_setcb(m_pBufevt, CNetThread::OnStaticRead, CNetThread::OnStaticWrite, CNetThread::OnStaticError, this);
+            bufferevent_enable(m_pBufevt, EV_READ|EV_PERSIST|EV_ET);		
 
             //设置读入最低水位，防止无效回调
             bufferevent_setwatermark(m_pBufevt, EV_READ, 
@@ -202,17 +201,12 @@ namespace NSQTOOL
 
         void CTcpHandler::TcpAdd(CCommand *pCmd)
         {
-            CAddr *pAddr = new CAddr();
-            pAddr->m_iThreadType = GetThread()->GetThreadType();
-            pAddr->m_iThreadId = GetThread()->GetThreadId();
-            pAddr->m_iHandlerId = GetHandlerId();
- 
             CTcpAddCommand *pConnectCmd = dynamic_cast<CTcpAddCommand *>(pCmd);
             CEventThread *pThread = dynamic_cast<CEventThread *>(GetThread()); 
             m_pBufevt = bufferevent_socket_new(pThread->GetEventBase(), 
                     pConnectCmd->m_iFd, BEV_OPT_THREADSAFE);
-            bufferevent_setcb(m_pBufevt, CNetThread::OnStaticRead, NULL, CNetThread::OnStaticError, pAddr);
-            bufferevent_enable(m_pBufevt, EV_READ|EV_WRITE|EV_PERSIST|EV_ET);		
+            bufferevent_setcb(m_pBufevt, CNetThread::OnStaticRead, CNetThread::OnStaticWrite, CNetThread::OnStaticError, this);
+            bufferevent_enable(m_pBufevt, EV_READ|EV_PERSIST|EV_ET);		
             bufferevent_setwatermark(m_pBufevt, EV_READ, 
                                       OnRead(NULL, 0), 0);
             OnConnect();
@@ -239,16 +233,6 @@ namespace NSQTOOL
                 case TCP_SEND_TYPE:
                 {
                     TcpSend(pCmd);
-                    break;
-                }
-                case TCP_DEL_TYPE:
-                {
-                    TcpDelete(pCmd); 
-                    break;
-                };
-                case TCP_READ_TYPE:
-                {
-                    TcpRead(pCmd);    
                     break;
                 }
             }

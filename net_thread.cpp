@@ -15,24 +15,20 @@ namespace NSQTOOL
 
     void CNetThread::OnStaticRead(struct bufferevent *pBufevt, void *arg)
     {
-        CAddr *pAddr = (CAddr *)arg;
-        CTcpReadCommand *pCmd = new CTcpReadCommand();
-        CCmdAddr cCmdAddr;
-        cCmdAddr.m_cDstAddr = *pAddr;
-        pCmd->SetAddr(cCmdAddr);
-        CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
-	    NsqLogPrintf(LOG_DEBUG, "OnStaticRead ThreadType = %d, ThreadId = %d, HandlerId = %ld", 
-		pAddr->m_iThreadType, pAddr->m_iThreadId, pAddr->m_iHandlerId);
+        CTcpHandler *pHandler = (CTcpHandler *)(arg);
+        pHandler->TcpRead();
+    }
+
+    void CNetThread::OnStaticWrite(struct bufferevent *pBufevt, void *arg)
+    {
+        CTcpHandler *pHandler = (CTcpHandler *)(arg);
+        pHandler->TcpWrite();
     }
 
     void CNetThread::OnStaticError(struct bufferevent *pBufevt, short iTemp, void *arg)
     {
-        CAddr *pAddr = (CAddr *)arg;
-        CTcpDelCommand *pCmd = new CTcpDelCommand(iTemp);
-        CCmdAddr cCmdAddr;
-        cCmdAddr.m_cDstAddr = *pAddr;
-        pCmd->SetAddr(cCmdAddr);
-        CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
+        CTcpHandler *pHandler = (CTcpHandler *)(arg);
+        pHandler->TcpDelete(iTemp); 
     }
 
     //////////////////////////////////////////////////////////
@@ -44,15 +40,11 @@ namespace NSQTOOL
 
     }
 
-    void CListenThread::OnStaticRead(struct evconnlistener *pListener, evutil_socket_t iAcceptHandle, 
+    void CListenThread::OnStaticRead(struct evconnlistener *pListener, evutil_socket_t iAcceptHandler, 
                                struct sockaddr *pAddr, int socklen, void *pArg)		
     {
-        CAddr *pDstAddr = (CAddr *)pArg;
-        CTcpListenAcceptCommand *pCmd = new CTcpListenAcceptCommand(iAcceptHandle);
-        CCmdAddr cCmdAddr;
-        cCmdAddr.m_cDstAddr = *pDstAddr;
-        pCmd->SetAddr(cCmdAddr);
-        CThreadMgrSingleton::GetInstance()->PostCmd(pCmd);
+       CListenHandler *pHandler = (CListenHandler *) (pArg); 
+       pHandler->TcpListenAccept(iAcceptHandler, pAddr, socklen);
     }
 };
 

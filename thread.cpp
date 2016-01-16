@@ -161,10 +161,12 @@ namespace NSQTOOL
         {
             m_lstCmd.clear();	
             m_bStop = true;
+            delete pCmd;
         }
         else if (pCmd->GetCmdType() == KEEPALIVE_TIMER && pCmd->GetAddr().m_cDstAddr.m_iHandlerId == -1)
         {
             OnKeepAlive(); 
+            delete pCmd;
         }
         else
         {
@@ -180,8 +182,9 @@ namespace NSQTOOL
                 
                 if (pHandler == NULL)
                 {
-                    NsqLogPrintf(LOG_DEBUG, "no found this handler handler id = ", pCmd->GetAddr().m_cDstAddr.m_iHandlerId);
+                    NsqLogPrintf(LOG_DEBUG, "no found this handler handler id = %d, ThreadType = %d, ThreadId = %d", pCmd->GetAddr().m_cDstAddr.m_iHandlerId, m_iThreadType, m_iThreadId);
                     delete pCmd; 
+                    return;
                 }
 
                 m_mapHandler[pHandler->GetHandlerId()] = pHandler;
@@ -356,6 +359,7 @@ namespace NSQTOOL
 
         m_mapThreadPool.clear();
     }
+
     void CThreadMgr::RegisterThreadPool(CThreadPool *pThreadPool)
     {
         NsqLogPrintf(LOG_DEBUG, "registerthreadpool threadtype = %d", pThreadPool->GetThreadType());

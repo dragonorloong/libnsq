@@ -3,7 +3,7 @@
 namespace NSQTOOL
 {
     //短连接超时
-    int g_iShortConnectTimeout = 300*1000;   //300ms
+    int g_iShortConnectTimeout = 300*1000*10;   //300ms
 
     //长连接超时
     int g_iLongConnectTimeout = 30*1000*1000; //30s
